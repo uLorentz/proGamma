@@ -1,14 +1,14 @@
-/********************************************************************************/
-/* Classi per l'analisi dei dati di un rivelatore salvati in file .Spe. 	*/
-/* Application: esegue il fit di gaussiane e le analizza 			*/
-/* Manage_flags: gestisce le flags del main					*/
-/*										*/
-/*			Written by Lorenzo Uboldi	 			*/
-/*			Contribution by Pietro F. Fontana			*/
-/*										*/
-/********************************************************************************/
-
-
+/******************************************************************************/
+/* Classes for data analysis from '.Spe' file from Maestro ORTEC software.    */
+/* Application: execute a fit and print some info                             */
+/* Manage_flags: handle config flags                                          */
+/*                                                                            */
+/* Written by :                                                               */
+/*      Lorenzo Uboldi <lorenzo.uboldi@studenti.unimi.it>                     */
+/* Contribution by :                                                          */
+/*     Pietro F. Fontana <pietrofrancesco.fontana@studenti.unimi.it>          */
+/*                                                                            */
+/******************************************************************************/
 
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
@@ -18,12 +18,13 @@
 #include <string>
 #include <cstdlib>
 #include <iomanip>
+
 //threading
 #include <thread>
 #include <mutex>
 #include <condition_variable>
 
-//Include di root
+//Include of ROOT
 #include "TH1F.h"
 #include "TCanvas.h"
 #include "TGraph.h"
@@ -36,76 +37,84 @@
 #include "TApplication.h"
 #include "TSystem.h"
 
-
-//FUNZIONA SOLO CON LA CLASSE APPLICATION
+//Works only with Application class
 class manage_flags{
 public:
-	//da passare le stesse variabili del main!
+	//it needs same arguments of main()
 	manage_flags(unsigned int argc, char** argv);
+
 private:
 	/* METHODS */
-
-	//analizza argv
+	//analize argv
 	void setflags();
-	//nessuna corrispondenza tra flags trovata
+	//no corresponding flag find
 	void error();
-	//stampa info sul programma
+	//print help message
 	void help();	
-	//fa partire application
+	//launch Application
 	void run(); 
 
 	/* MEMBERS */
-	//vettore di stringhe con tutti gli argomenti	
+	//string vector with all arguments	
 	std::vector<std::string> arg;
+	//min and max numbers of arguments
+	const int minargs, maxargs; 
 
-	const int minargs, maxargs; //numero minimo e massimo di args che posso avere
-
-
-	//variabili da passare al costruttore di application
+	//variables needed by Application constructor
 	std::string filename;
 	bool config;
-
 };
 
-//struttura con gli estremi del fit, rende meno dispersivo il codice
+//structure containing fit bounds, nicer and shorter
 struct bin_config{
 	int left;
 	int right;
 };
 
-//classe che esegue tutto
+//class that contains all executes
 class application{
 public:
-	//nome file .Spe. Choose=false se si vuole usare l'ultima config disponibile, =true se si vuole scegliere tra tutte le config
+	//name of '.Spe' file. 'choose=false' if you want to use the last config, 
+	//'choose=true' if you want to choose from all existent configs.
 	application(std::string _filename, bool _choose=false); 
 	void run();
+
 private:
-/**METHODS**/
-	//legge sul file "filename" i dati e riempie il vettore data
+	/* METHODS */
+	//read 'filename' file and put data in a 'data' vector
 	void read_data ();
-	//da chiamare nel costruttore, crea il file di config se non esiste, se esiste legge le config 
+	//create config file if non existent, read config file if existent 
 	void get_config();
-	//fa scegliere la config 
+	//let the user choose a config 
 	void choose_config();
 	
-	//setta la config
+	//set config
 	void set_config(unsigned int canale1, unsigned int canale2);
-	//da definire un metodo che fa le cose di root e uno che chiede diinserire nuovi bin, entrambi thread, il secondo può killare il primo, modificare il file di config e ripartire
-
-	//tutta la pappardella di root
+	
+	//name self-explain
 	void ROOT_stuff(); 
 
-/**members**/
-	std::string filename,fileconfname; //filename=file.Spe (dati), fileconfname=file.config (configurazioni dei picchi)
-	std::string time_real, time_live; //stringhe con i tempi vivi e reali della presa dati
-	std::vector<float> data; //dati
-	bool configured; // sono settati i canali del picco?
-	bool choose; //scelgo tra tutte le conf o uso l'ultima?
-	unsigned int ch1, ch2; //i canali da cui fare il fit
-	std::vector<bin_config> bins; //tutte le conf
-	bool stay_alive; //finché è true ROOT vive
-	bool refresh; //quando diventa true i dati del fit sono cambiati e le canvas vanno aggiornate
-	bool ask; //true parte il menù di scelta delle opzioni, false aspetta a chiedere
+	/* MEMBERS */
+	//filename=file.Spe (data), fileconfname=file.config (peak configs)
+	std::string filename,fileconfname; 
+	//string with 'live time' and 'real time' of data collection
+	std::string time_real, time_live; 
+	//data vector
+	std::vector<float> data;
+	//'true' if peak bounds are configured, otherwise 'false'
+	bool configured; 
+	//'true' if user want to chose a particular config, otherwise 'false'
+	bool choose; 
+	//peak fit bounds
+	unsigned int ch1, ch2; 
+	//vector containing all peak config
+	std::vector<bin_config> bins; 	
+	//it is 'true' till ROOT is alive
+	bool stay_alive; 
+	//when 'true' peaks config are modified and ROOT canvas should be reloaded
+	bool refresh; 	
+	//when 'true' launch the config choose menu, when 'false' wait before asking
+	bool ask; 
 
 	//threading stuff	
 	std::mutex mut_ask, mut_refresh;
