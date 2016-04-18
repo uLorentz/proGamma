@@ -1,7 +1,7 @@
 /******************************************************************************/
-/* Classes for data analysis from '.Spe' file from Maestro ORTEC software.    */
-/* Application: execute a fit and print some info                             */
-/* Manage_flags: handle config flags                                          */
+/* Program for data analysis from '.Spe' file from Maestro ORTEC software.    */
+/* application: execute a fit and print some info                             */
+/* manage_flags: handle config flags                                          */
 /*                                                                            */
 /* Written by :                                                               */
 /*      Lorenzo Uboldi <lorenzo.uboldi@studenti.unimi.it>                     */
@@ -32,7 +32,7 @@
 #include "TGraphErrors.h"
 #include "TF1.h"
 #include "TStyle.h"
-//#include "TObjArray.h" 
+//#include "TObjArray.h"
 //#include "TRandom.h"
 #include "TApplication.h"
 #include "TSystem.h"
@@ -45,20 +45,20 @@ public:
 
 private:
 	/* METHODS */
-	//analize argv and set all the flags to be passed to progamma
+	//analize argv and set all the flags to be passed to proGamma
 	void setflags();
 	//no corresponding flag found, print a short help message
 	void error();
 	//print help message
-	void help();	
+	void help();
 	//launch application
-	void run(); 
+	void run();
 
 	/* MEMBERS */
-	//string vector with all  the arguments	
+	//string vector with all  the arguments
 	std::vector<std::string> arg;
 	//min and max number of arguments
-	const int minargs, maxargs; 
+	const int minargs, maxargs;
 
 	//variables needed by application constructor
 	std::string filename;
@@ -74,49 +74,49 @@ struct bin_config{
 //the "proGamma" itself
 class application{
 public:
-	//name of '.Spe' file. 'choose=false' if you want to use the last config, 
+	//name of '.Spe' file. 'choose=false' if you want to use the last config,
 	//'choose=true' if you want to choose from all existent configs.
-	application(std::string _filename, bool _choose=false); 
+	application(std::string _filename, bool _choose=false);
 	void run();
 
 private:
 	/* METHODS */
 	//read 'filename' file and put data in a 'data' vector
 	void read_data ();
-	//create config file if non existent, read config file if existent 
+	//create config file if non existent, read config file if existent
 	void get_config();
-	//to choose configuration of the peak  
+	//to choose configuration of the peak
 	void choose_config();
-	
+
 	//set config
 	void set_config(unsigned int canale1, unsigned int canale2);
-	
-	//name self-explaing
-	void ROOT_stuff(); 
+
+	//name self-explaining
+	void ROOT_stuff();
 
 	/* MEMBERS */
 	//filename=file.Spe (data), fileconfname=file.config (peak configs)
-	std::string filename,fileconfname; 
+	std::string filename,fileconfname;
 	//string with 'live time' and 'real time' of data collection
-	std::string time_real, time_live; 
+	std::string time_real, time_live;
 	//data vector
 	std::vector<float> data;
 	//'true' if peak bounds are configured, otherwise 'false'
-	bool configured; 
+	bool configured;
 	//'true' if user want to chose a particular config, otherwise 'false'
-	bool choose; 
+	bool choose;
 	//peak fit bounds
-	unsigned int ch1, ch2; 
+	unsigned int ch1, ch2;
 	//vector containing all peak config
-	std::vector<bin_config> bins; 	
+	std::vector<bin_config> bins;
 	//if true root can live
-	bool stay_alive; 
+	bool stay_alive;
 	//when 'true' peaks config are modified and ROOT canvas should be reloaded
-	bool refresh; 	
+	bool refresh;
 	//when 'true' launch the config choose menu, when 'false' wait before asking
-	bool ask; 
+	bool ask;
 
-	//threading stuff	
+	//threading stuff
 	std::mutex mut_ask, mut_refresh;
 	std::condition_variable cond;
 };
