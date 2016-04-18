@@ -67,9 +67,14 @@ void application::choose_config(){ //abbastanza autoesplicativo
 		std::cout << i+1<< "): \n";
 		std::cout << "\t"<<bins[i].left<< "\t" << bins[i].right << std::endl;
 	}
-	std::cout << "Quale vuoi usare?: ";
-	short answ;
-	std::cin >> answ;
+	std::cout << "Quale vuoi usare? (invio per l'ultimo disponibile): ";
+	short answ=0;
+	//std::cin >> answ;
+	std::string str;
+	getline( std::cin, str);
+	answ=std::stoi(str);
+	if(answ==0) //setto all'ultimo (l'utente ha schiacciato invio)
+		answ=bins.size()+1;
 	//swappo quello da usare con l'ultimo e scrivo sul file config
 	set_config(bins[answ-1].left, bins[answ-1].right); //potrei (per performance, questa funzione si mette a ricercare da capo, un sacco di overhead) scrivere qui quello che devo fare (swappare le conf e scrivere su file), ma per comodità uso la funz. già fatta
 }
