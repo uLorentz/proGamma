@@ -69,12 +69,18 @@ void application::choose_config(){ //abbastanza autoesplicativo
 	}
 	std::cout << "Quale vuoi usare? (invio per l'ultimo disponibile): ";
 	short answ=0;
-//	std::cin >> answ;
 	std::string str;
 	getline( std::cin, str);
 	if(str.empty())
 		str="0";
-	answ=std::stoi(str);
+	try{
+		answ=std::stoi(str);
+	}
+	catch(const std::invalid_argument& ia){
+		std::cout << "\n\n\nATTENZIONE: hai inserito una scelta non valida. Prova di nuovo! \n" << std::endl;
+		choose_config();
+		return;
+	}
 	if(answ==0) //setto all'ultimo (l'utente ha schiacciato invio)
 		answ=bins.size();
 	//swappo quello da usare con l'ultimo e scrivo sul file config
@@ -334,9 +340,25 @@ void application::run(){
 		cond.wait(lk, [this]{return ask;});
 		lk.unlock();
 	
-		std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire un fit;\n\t(2) per scegliere una configurazione precedentemente usata;\n\t(3) per terminare il programma." << std::endl;
-		std::cout << "Inserisci: ";
-		std::cin >> what;
+//		std::cin >> what;
+		bool fine=false; //l'utente ha inserito correttamente la scelta
+		while(!fine){
+			std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire un fit;\n\t(2) per scegliere una configurazione precedentemente usata;\n\t(3) per terminare il programma." << std::endl;
+				std::cout << "Inserisci: ";
+			fine=true;
+			std::string str;
+			getline( std::cin, str);
+			if(str.empty())
+				fine=false;
+			try{
+				what=std::stoi(str);
+			}
+			catch(const std::invalid_argument& ia){
+				fine=false;
+			}
+			if(!fine)
+				std::cout << "\n\n\nATTENZIONE: scelta non valida! Inserisci correttamente! \n" << std::endl;
+		}
 		if(what==1){
 			std::cout << "Inserisci i nuovi canali.\n";
 	                std::cout << "Ch1: ";
