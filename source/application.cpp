@@ -333,14 +333,11 @@ void application::run(){
 
 
 	while(processing){
-	//risoluzione schifosa del problema (e se il mio processore ci mette di più di due secondi?) meglio una cond_variable
-	//	sleep(2); //aspetto un secondino che parta tutta la robaccia di root
 		
 		std::unique_lock<std::mutex> lk(mut_ask);
 		cond.wait(lk, [this]{return ask;});
 		lk.unlock();
 	
-//		std::cin >> what;
 		bool fine=false; //l'utente ha inserito correttamente la scelta
 		while(!fine){
 			std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire un fit;\n\t(2) per scegliere una configurazione precedentemente usata;\n\t(3) per terminare il programma." << std::endl;
@@ -356,8 +353,10 @@ void application::run(){
 			catch(const std::invalid_argument& ia){
 				fine=false;
 			}
-			if(!fine)
+			if(!fine or (what<1 or what>3)){
+				fine=false; //se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
 				std::cout << "\n\n\nATTENZIONE: scelta non valida! Inserisci correttamente! \n" << std::endl;
+			}
 		}
 		if(what==1){
 			std::cout << "Inserisci i nuovi canali.\n";
@@ -370,7 +369,7 @@ void application::run(){
 			refresh=true; //dico a root di aggiornare i fit e le canvas
 			mut_refresh.unlock();
 		}
-		if(what==2){ //TODO che manca?
+		if(what==2){ 
 			choose_config();
 			mut_refresh.lock(); 
 			refresh=true; //dico a root di aggiornare i fit e le canvas
