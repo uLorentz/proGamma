@@ -37,7 +37,7 @@
 #include "TApplication.h"
 #include "TSystem.h"
 
-//Works only with Application class
+//Works only with "application" class
 class manage_flags{
 public:
 	//it needs same arguments of main()
@@ -45,33 +45,33 @@ public:
 
 private:
 	/* METHODS */
-	//analize argv
+	//analize argv and set all the flags to be passed to progamma
 	void setflags();
-	//no corresponding flag find
+	//no corresponding flag found, print a short help message
 	void error();
 	//print help message
 	void help();	
-	//launch Application
+	//launch application
 	void run(); 
 
 	/* MEMBERS */
-	//string vector with all arguments	
+	//string vector with all  the arguments	
 	std::vector<std::string> arg;
-	//min and max numbers of arguments
+	//min and max number of arguments
 	const int minargs, maxargs; 
 
-	//variables needed by Application constructor
+	//variables needed by application constructor
 	std::string filename;
 	bool config;
 };
 
-//structure containing fit bounds, nicer and shorter
+//structure containing fit bounds
 struct bin_config{
 	int left;
 	int right;
 };
 
-//class that contains all executes
+//the "proGamma" itself
 class application{
 public:
 	//name of '.Spe' file. 'choose=false' if you want to use the last config, 
@@ -85,13 +85,13 @@ private:
 	void read_data ();
 	//create config file if non existent, read config file if existent 
 	void get_config();
-	//let the user choose a config 
+	//to choose configuration of the peak  
 	void choose_config();
 	
 	//set config
 	void set_config(unsigned int canale1, unsigned int canale2);
 	
-	//name self-explain
+	//name self-explaing
 	void ROOT_stuff(); 
 
 	/* MEMBERS */
@@ -109,7 +109,7 @@ private:
 	unsigned int ch1, ch2; 
 	//vector containing all peak config
 	std::vector<bin_config> bins; 	
-	//it is 'true' till ROOT is alive
+	//if true root can live
 	bool stay_alive; 
 	//when 'true' peaks config are modified and ROOT canvas should be reloaded
 	bool refresh; 	
