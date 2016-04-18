@@ -24,7 +24,7 @@
 #include <mutex>
 #include <condition_variable>
 
-//Include di root
+//Include of ROOT
 #include "TH1F.h"
 #include "TCanvas.h"
 #include "TGraph.h"
