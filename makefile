@@ -19,14 +19,14 @@ LIBS=`root-config --libs`
 
 all: $(obj)
 	$(CXX) $(OBJPATH)*.o -o proGamma $(CXXFLAGS) ${INCS} ${LIBS}
-ifeq ($(wildcard configure_files*),) #cerco per la cartella "configure_files", se non esiste la creo
+ifeq ($(wildcard configure_files*),) #search for "configure_files" folder and create it if it doesn't exist
 	@mkdir configure_files	
 endif
 
-#%.o: %.cpp functions.h
-#	$(CXX) -c $< -o $(OBJPATH)$@ $(CXXFLAGS) ${INCS}
-
 %.o: %.cpp	
+ifeq ($(wildcard $(OBJPATH)*),) #search for obj path, create it if it doesn't exist 
+	@mkdir -p $(OBJPATH)
+endif
 	$(CXX) -c $< -o $(OBJPATH)$@ $(CXXFLAGS) ${INCS}
 
 .PHONY: clean
