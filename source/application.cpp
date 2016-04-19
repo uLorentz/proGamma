@@ -304,8 +304,6 @@ void application::ROOT_stuff(){
 			gg->Draw();
 			canvas2.Modified();
 			canvas2.Update();
-<<<<<<< HEAD
-=======
 		}		
 		//se sono arrivato qua dovrei avere tutte le canvas e la roba di root che è partita, è arrivato il momento di chiedere all'utente cosa vuole fare della sua vita
 		
@@ -319,7 +317,6 @@ void application::ROOT_stuff(){
 		while (!refresh and stay_alive)
 			gSystem->ProcessEvents();
 		if(previously_configured){ //per poterli ricreare al ciclo successivo
->>>>>>> upstream/testing
 			delete g1;
 			delete pp;
 			delete total;
@@ -349,10 +346,7 @@ void application::run(){
 		while(!fine){
 			std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire "
 				"un fit;\n\t(2) per scegliere una configurazione precedentemente"
-<<<<<<< HEAD
-=======
 				" usata;\n\t(3) per terminare il programma." << std::endl;
->>>>>>> upstream/testing
 				std::cout << "Inserisci: ";
 			fine=true;
 			//TODO se nel buffer di cin c'è qualcosa lo getline lo legge, bisogna svuotare competamente cin, come fare?
@@ -380,10 +374,7 @@ void application::run(){
 			std::cin >>ch1;
 			std::cout << "Ch2: ";
 			std::cin>> ch2;
-<<<<<<< HEAD
-=======
 			std::cin.ignore(); //rimuovo gli "a capo"
->>>>>>> upstream/testing
 			set_config(ch1, ch2);
 			mut_refresh.lock();
 			refresh=true; //dico a root di aggiornare i fit e le canvas
