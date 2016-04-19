@@ -299,27 +299,26 @@ void application::ROOT_stuff(){
 			canvas2.Update();
 		}		
 		//se sono arrivato qua dovrei avere tutte le canvas e la roba di root che è partita, è arrivato il momento di chiedere all'utente cosa vuole fare della sua vita
-
+		
+		bool previously_configured=configured; //nel ciclo while (questo thread sta "aspettando") l'utente potrebbe cambiare le configurazioni con l'altro thread: se configured diventa true entro nell'if, ma non dovrei!, quindi mi salvo lo stato di configured prima che l'utente possa cambiarlo.	
 		//un po' di roba di comunicazione tra thread
 		std::unique_lock<std::mutex> lk(mut_ask);
 	        ask=true; //il main thread può far comparire il menù 
 	        cond.notify_all();
-		lk.unlock();	
+		lk.unlock();
 		//to set up the fucking waiting sistem hoping this time will work 
 		while (!refresh and stay_alive)
 			gSystem->ProcessEvents();
-		if(configured){ //per poterli ricreare al ciclo successivo
-			delete g1; 
+		if(previously_configured){ //per poterli ricreare al ciclo successivo
+			delete g1;
 			delete pp;
 			delete total;	
 		}
-
 
 		mut_refresh.lock();
 		refresh=false; //devo riportarlo indietro, se no si rischia di entrare in un loop infinito TODO aggiungere il controllo su mutex
 		mut_refresh.unlock();
 		delete gg; //OPZIONE 2
-
 	}
 //	delete gg; //OPZIONE 1
 }
@@ -343,6 +342,9 @@ void application::run(){
 			std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire un fit;\n\t(2) per scegliere una configurazione precedentemente usata;\n\t(3) per terminare il programma." << std::endl;
 				std::cout << "Inserisci: ";
 			fine=true;
+			//TODO se nel buffer di cin c'è qualcosa lo getline lo legge, bisogna svuotare competamente cin, come fare?
+			std::cin.clear(); //pulisco lo stream, cosa c'è dentro?
+//			std::fflush(stdin); //idem
 			std::string str;
 			getline( std::cin, str);
 			if(str.empty())
