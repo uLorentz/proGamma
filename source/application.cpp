@@ -95,6 +95,7 @@ void application::choose_config(){ //abbastanza autoesplicativo
 		answ=bins.size();
 	//swappo quello da usare con l'ultimo e scrivo sul file config
 	set_config(bins[answ-1].left, bins[answ-1].right); //potrei (per performance, questa funzione si mette a ricercare da capo, un sacco di overhead) scrivere qui quello che devo fare (swappare le conf e scrivere su file), ma per comodità uso la funz. già fatta
+
 }
 
 void application::read_data (){
@@ -136,8 +137,6 @@ void application::set_config(unsigned int canale1, unsigned int canale2){
 	std::ofstream out(fileconfname.c_str()); //apro canale in uscita con file di config
 	if(canale1>canale2){ //non ha senso
 		std::cout << "You have inserted a non valid channel configuration. Unconfiguring..." << std::endl;
-		//ch1=0;
-		//ch2=0;
 		canale1=0;
 		canale2=0;
 	}
@@ -305,20 +304,22 @@ void application::ROOT_stuff(){
 			gg->Draw();
 			canvas2.Modified();
 			canvas2.Update();
-		}
-		//se sono arrivato qua dovrei avere tutte le canvas e la roba di root
-		//che è partita, è arrivato il momento di chiedere all'utente cosa vuole
-		//fare della sua vita
-
+<<<<<<< HEAD
+=======
+		}		
+		//se sono arrivato qua dovrei avere tutte le canvas e la roba di root che è partita, è arrivato il momento di chiedere all'utente cosa vuole fare della sua vita
+		
+		bool previously_configured=configured; //nel ciclo while (questo thread sta "aspettando") l'utente potrebbe cambiare le configurazioni con l'altro thread: se configured diventa true entro nell'if, ma non dovrei!, quindi mi salvo lo stato di configured prima che l'utente possa cambiarlo.	
 		//un po' di roba di comunicazione tra thread
 		std::unique_lock<std::mutex> lk(mut_ask);
-		ask=true; //il main thread può far comparire il menù
-		cond.notify_all();
+	        ask=true; //il main thread può far comparire il menù 
+	        cond.notify_all();
 		lk.unlock();
-		//to set up the fucking waiting sistem hoping this time will work
+		//to set up the fucking waiting sistem hoping this time will work 
 		while (!refresh and stay_alive)
 			gSystem->ProcessEvents();
-		if(configured){ //per poterli ricreare al ciclo successivo
+		if(previously_configured){ //per poterli ricreare al ciclo successivo
+>>>>>>> upstream/testing
 			delete g1;
 			delete pp;
 			delete total;
@@ -348,9 +349,15 @@ void application::run(){
 		while(!fine){
 			std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire "
 				"un fit;\n\t(2) per scegliere una configurazione precedentemente"
-				"usata;\n\t(3) per terminare il programma." << std::endl;
+<<<<<<< HEAD
+=======
+				" usata;\n\t(3) per terminare il programma." << std::endl;
+>>>>>>> upstream/testing
 				std::cout << "Inserisci: ";
 			fine=true;
+			//TODO se nel buffer di cin c'è qualcosa lo getline lo legge, bisogna svuotare competamente cin, come fare?
+			std::cin.clear(); //pulisco eventiali flag di errore
+			std::fflush(stdin); //svuoto lo stream
 			std::string str;
 			getline( std::cin, str);
 			if(str.empty())
@@ -373,6 +380,10 @@ void application::run(){
 			std::cin >>ch1;
 			std::cout << "Ch2: ";
 			std::cin>> ch2;
+<<<<<<< HEAD
+=======
+			std::cin.ignore(); //rimuovo gli "a capo"
+>>>>>>> upstream/testing
 			set_config(ch1, ch2);
 			mut_refresh.lock();
 			refresh=true; //dico a root di aggiornare i fit e le canvas
