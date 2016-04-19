@@ -95,6 +95,7 @@ void application::choose_config(){ //abbastanza autoesplicativo
 		answ=bins.size();
 	//swappo quello da usare con l'ultimo e scrivo sul file config
 	set_config(bins[answ-1].left, bins[answ-1].right); //potrei (per performance, questa funzione si mette a ricercare da capo, un sacco di overhead) scrivere qui quello che devo fare (swappare le conf e scrivere su file), ma per comodità uso la funz. già fatta
+
 }
 
 void application::read_data (){
@@ -136,8 +137,6 @@ void application::set_config(unsigned int canale1, unsigned int canale2){
 	std::ofstream out(fileconfname.c_str()); //apro canale in uscita con file di config
 	if(canale1>canale2){ //non ha senso
 		std::cout << "You have inserted a non valid channel configuration. Unconfiguring..." << std::endl;
-		//ch1=0;
-		//ch2=0;
 		canale1=0;
 		canale2=0;
 	}
@@ -351,8 +350,8 @@ void application::run(){
 				std::cout << "Inserisci: ";
 			fine=true;
 			//TODO se nel buffer di cin c'è qualcosa lo getline lo legge, bisogna svuotare competamente cin, come fare?
-			std::cin.clear(); //pulisco lo stream, cosa c'è dentro?
-//			std::fflush(stdin); //idem
+			std::cin.clear(); //pulisco eventiali flag di errore
+			std::fflush(stdin); //svuoto lo stream
 			std::string str;
 			getline( std::cin, str);
 			if(str.empty())
@@ -375,6 +374,7 @@ void application::run(){
 			std::cin >>ch1;
 			std::cout << "Ch2: ";
 			std::cin>> ch2;
+			std::cin.ignore(); //rimuovo gli "a capo"
 			set_config(ch1, ch2);
 			mut_refresh.lock();
 			refresh=true; //dico a root di aggiornare i fit e le canvas
