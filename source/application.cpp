@@ -20,7 +20,8 @@ application::application(std::string _filename, bool _choose ) :
 	stay_alive(true),
 	refresh(false),
 	ask(false),
-	choose(_choose)
+	choose(_choose),
+	config_empty(true)	
 {
 	read_data(); //leggo i dati e riempio il vettore
 	get_config(); //controllo se le configurazioni ci sono
@@ -45,19 +46,16 @@ void application::get_config() {
 			exit(3);
 		}
 		//riempio con due zeri il file ma la flag "configured" rimane su false, non ho i canali del picco
-		//fileconfig<<0<<std::endl<<0<<std::endl; //TEMP
 		fileconfig.close();
 		configured=false;
 	}
 	// provo ad aggiungere un else if, nel caso in cui sia vuoto il file di conf //TEMP
 	else if (fileconfig.peek() == std::ifstream::traits_type::eof()) {
-		std::cout << "Il file di configurazione è vuoto per qualche ragione."
-			<< std::endl;
 		fileconfig.close();
 		config_empty=true;
 		configured=false;
 	}
-	else{ //il file esiste, leggo i due valori
+	else{ //il file esiste, leggo i valori
 		config_empty=false;
 		bin_config temp; //variabile temporanea in cui leggere
 		for(;;){ //leggo tutte le configurazioni
@@ -72,7 +70,7 @@ void application::get_config() {
 			ch1=bins.back().left;
 			ch2=bins.back().right;
 		}
-		if(ch1!=ch2) //se sono diversi allora ho le configurazioni del picco
+		if(ch1!=ch2) //se sono diversi allora ho le configurazioni del picco TODO inutile ora?
 			configured=true;
 		else //se sono uguali non ho le configurazioni
 			configured=false;
@@ -214,7 +212,7 @@ void application::ROOT_stuff(){
 			gg->SetBinContent(i, data[i]);
 
 		if(!configured){
-			std::cout << std::endl << "Nessuna configurazione dei canali per il fit trovata, analizzare il grafico ed inserire i canali nel file: " << fileconfname << std::endl;
+			std::cout << std::endl << "Nessuna configurazione dei canali per il fit trovata, analizzare il grafico ed inserire i canali scegliendo (1). " <<std::endl;
 			canvas3.Modified();
 			canvas3.Update();
 			canvas4.Modified();
@@ -354,10 +352,21 @@ void application::run(){
 
 		bool fine=false; //l'utente ha inserito correttamente la scelta
 		while(!fine){
-			std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire "
-				"un fit;\n\t(2) per scegliere una configurazione precedentemente"
-				" usata;\n\t(3) per terminare il programma." << std::endl;
-				std::cout << "Inserisci: ";
+			// DIVIDO il caso in cui ci sono configurazioni precedenti e il caso in cui non ci sono
+			if(config_empty)
+				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire "
+					  <<  "\n\t(2) per terminare il programma." << std::endl;
+			
+
+
+			else
+				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire "
+			 		  << "un fit;\n\t(2) per scegliere una configurazione precedentemente"
+					  <<  " usata;\n\t(3) per terminare il programma." << std::endl;
+			
+
+
+			std::cout << "Inserisci: ";
 			fine=true;
 			//TODO se nel buffer di cin c'è qualcosa lo getline lo legge, bisogna svuotare competamente cin, come fare?
 			std::cin.clear(); //pulisco eventiali flag di errore
@@ -372,11 +381,27 @@ void application::run(){
 			catch(const std::invalid_argument& ia){
 				fine=false;
 			}
-			if(!fine or (what<1 or what>3) or (what==2 and config_empty)){ //TEMP
-				fine=false; //se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
-				std::cout << "\n\n\nATTENZIONE: scelta non valida! "
-					"Inserisci correttamente! \n" << std::endl;
+
+
+
+			
+			if(!config_empty){
+				if(!fine or (what<1 or what>3)){
+					fine=false; //se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
+					std::cout << "\n\n\nATTENZIONE: scelta non valida! Inserisci correttamente! \n" << std::endl;
+				}
 			}
+			else{
+				if(!fine or (what<1 or what>2)){
+					fine=false; //se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
+					std::cout << "\n\n\nATTENZIONE: scelta non valida! Inserisci correttamente! \n" << std::endl;
+				}
+				if(what==2)
+					what++;
+			}
+
+
+
 		}
 		if(what==1){
 			std::cout << "Inserisci i nuovi canali.\n";
