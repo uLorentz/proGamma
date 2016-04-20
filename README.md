@@ -10,3 +10,10 @@ In particolare il programma è stato scritto per l'analisi dei dati provenienti 
 
 ### Utilizzo
 Per informazioni sull'utilizzo di `proGamma` lanciare `./proGamma --help`
+
+### Autori
+proGamma è stato scritto da:                            
+    Lorenzo Uboldi <lorenzo.uboldi@studenti.unimi.it> 
+con il contributo di:     
+     Pietro F. Fontana <pietrofrancesco.fontana@studenti.unimi.it>    
+ed è distribuito secondo la GNU GENERAL PUBLIC LICENSE 3.0. 
