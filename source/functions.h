@@ -101,6 +101,8 @@ private:
 	std::string time_real, time_live;
 	//data vector
 	std::vector<float> data;
+	//'true' if config file empty, otherwise 'false' //TEMP
+	bool config_empty;
 	//'true' if peak bounds are configured, otherwise 'false'
 	bool configured;
 	//'true' if user want to chose a particular config, otherwise 'false'

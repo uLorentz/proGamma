@@ -45,11 +45,20 @@ void application::get_config() {
 			exit(3);
 		}
 		//riempio con due zeri il file ma la flag "configured" rimane su false, non ho i canali del picco
-		fileconfig<<0<<std::endl<<0<<std::endl;
+		//fileconfig<<0<<std::endl<<0<<std::endl; //TEMP
 		fileconfig.close();
 		configured=false;
 	}
+	// provo ad aggiungere un else if, nel caso in cui sia vuoto il file di conf //TEMP
+	else if (fileconfig.peek() == std::ifstream::traits_type::eof()) {
+		std::cout << "Il file di configurazione è vuoto per qualche ragione." 
+			<< std::endl;
+		fileconfig.close();
+		config_empty=true;
+		configured=false;
+	}
 	else{ //il file esiste, leggo i due valori
+		config_empty=false;
 		bin_config temp; //variabile temporanea in cui leggere
 		for(;;){ //leggo tutte le configurazioni
 			fileconfig>>temp.left >>temp.right;
@@ -169,6 +178,7 @@ void application::set_config(unsigned int canale1, unsigned int canale2){
 		out << bins[i].left << std::endl << bins[i].right << std::endl;
 
 	out.close();
+	config_empty=false; //TEMP
 
 	if(ch1!=ch2) //ho un picco da fittare
 		configured=true;
@@ -362,7 +372,7 @@ void application::run(){
 			catch(const std::invalid_argument& ia){
 				fine=false;
 			}
-			if(!fine or (what<1 or what>3)){
+			if(!fine or (what<1 or what>3) or (what==2 and config_empty)){ //TEMP
 				fine=false; //se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
 				std::cout << "\n\n\nATTENZIONE: scelta non valida! "
 					"Inserisci correttamente! \n" << std::endl;
