@@ -51,7 +51,7 @@ void application::get_config() {
 	}
 	// provo ad aggiungere un else if, nel caso in cui sia vuoto il file di conf //TEMP
 	else if (fileconfig.peek() == std::ifstream::traits_type::eof()) {
-		std::cout << "Il file di configurazione è vuoto per qualche ragione." 
+		std::cout << "Il file di configurazione è vuoto per qualche ragione."
 			<< std::endl;
 		fileconfig.close();
 		config_empty=true;
@@ -314,16 +314,16 @@ void application::ROOT_stuff(){
 			gg->Draw();
 			canvas2.Modified();
 			canvas2.Update();
-		}		
+		}
 		//se sono arrivato qua dovrei avere tutte le canvas e la roba di root che è partita, è arrivato il momento di chiedere all'utente cosa vuole fare della sua vita
-		
-		bool previously_configured=configured; //nel ciclo while (questo thread sta "aspettando") l'utente potrebbe cambiare le configurazioni con l'altro thread: se configured diventa true entro nell'if, ma non dovrei!, quindi mi salvo lo stato di configured prima che l'utente possa cambiarlo.	
+
+		bool previously_configured=configured; //nel ciclo while (questo thread sta "aspettando") l'utente potrebbe cambiare le configurazioni con l'altro thread: se configured diventa true entro nell'if, ma non dovrei!, quindi mi salvo lo stato di configured prima che l'utente possa cambiarlo.
 		//un po' di roba di comunicazione tra thread
 		std::unique_lock<std::mutex> lk(mut_ask);
-	        ask=true; //il main thread può far comparire il menù 
+	        ask=true; //il main thread può far comparire il menù
 	        cond.notify_all();
 		lk.unlock();
-		//to set up the fucking waiting sistem hoping this time will work 
+		//to set up the fucking waiting sistem hoping this time will work
 		while (!refresh and stay_alive)
 			gSystem->ProcessEvents();
 		if(previously_configured){ //per poterli ricreare al ciclo successivo
