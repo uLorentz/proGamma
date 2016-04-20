@@ -45,11 +45,20 @@ void application::get_config() {
 			exit(3);
 		}
 		//riempio con due zeri il file ma la flag "configured" rimane su false, non ho i canali del picco
-		fileconfig<<0<<std::endl<<0<<std::endl;
+		//fileconfig<<0<<std::endl<<0<<std::endl; //TEMP
 		fileconfig.close();
 		configured=false;
 	}
+	// provo ad aggiungere un else if, nel caso in cui sia vuoto il file di conf //TEMP
+	else if (fileconfig.peek() == std::ifstream::traits_type::eof()) {
+		std::cout << "Il file di configurazione è vuoto per qualche ragione."
+			<< std::endl;
+		fileconfig.close();
+		config_empty=true;
+		configured=false;
+	}
 	else{ //il file esiste, leggo i due valori
+		config_empty=false;
 		bin_config temp; //variabile temporanea in cui leggere
 		for(;;){ //leggo tutte le configurazioni
 			fileconfig>>temp.left >>temp.right;
@@ -169,6 +178,7 @@ void application::set_config(unsigned int canale1, unsigned int canale2){
 		out << bins[i].left << std::endl << bins[i].right << std::endl;
 
 	out.close();
+	config_empty=false; //TEMP
 
 	if(ch1!=ch2) //ho un picco da fittare
 		configured=true;
@@ -304,16 +314,16 @@ void application::ROOT_stuff(){
 			gg->Draw();
 			canvas2.Modified();
 			canvas2.Update();
-		}		
+		}
 		//se sono arrivato qua dovrei avere tutte le canvas e la roba di root che è partita, è arrivato il momento di chiedere all'utente cosa vuole fare della sua vita
-		
-		bool previously_configured=configured; //nel ciclo while (questo thread sta "aspettando") l'utente potrebbe cambiare le configurazioni con l'altro thread: se configured diventa true entro nell'if, ma non dovrei!, quindi mi salvo lo stato di configured prima che l'utente possa cambiarlo.	
+
+		bool previously_configured=configured; //nel ciclo while (questo thread sta "aspettando") l'utente potrebbe cambiare le configurazioni con l'altro thread: se configured diventa true entro nell'if, ma non dovrei!, quindi mi salvo lo stato di configured prima che l'utente possa cambiarlo.
 		//un po' di roba di comunicazione tra thread
 		std::unique_lock<std::mutex> lk(mut_ask);
-	        ask=true; //il main thread può far comparire il menù 
+	        ask=true; //il main thread può far comparire il menù
 	        cond.notify_all();
 		lk.unlock();
-		//to set up the fucking waiting sistem hoping this time will work 
+		//to set up the fucking waiting sistem hoping this time will work
 		while (!refresh and stay_alive)
 			gSystem->ProcessEvents();
 		if(previously_configured){ //per poterli ricreare al ciclo successivo
@@ -362,7 +372,7 @@ void application::run(){
 			catch(const std::invalid_argument& ia){
 				fine=false;
 			}
-			if(!fine or (what<1 or what>3)){
+			if(!fine or (what<1 or what>3) or (what==2 and config_empty)){ //TEMP
 				fine=false; //se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
 				std::cout << "\n\n\nATTENZIONE: scelta non valida! "
 					"Inserisci correttamente! \n" << std::endl;
