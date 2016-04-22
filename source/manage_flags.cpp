@@ -86,11 +86,11 @@ void manage_flags::help(){
 
 void manage_flags::run(){
 	if(!config){
-		application app(filename);
+		application app(filename, false, "fondo21aprile.Spe");
 		app.run();
 	}
 	else{
-		application app(filename, config);
+		application app(filename, config, "fondo21aprile.Spe");
 		app.run();
 	}
 }

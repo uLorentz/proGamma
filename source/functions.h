@@ -75,14 +75,18 @@ struct bin_config{
 class application{
 public:
 	//name of '.Spe' file. 'choose=false' if you want to use the last config,
-	//'choose=true' if you want to choose from all existent configs.
-	application(std::string _filename, bool _choose=false);
+	//'choose=true' if you want to choose from all existent configs. //backgroundfile: leave blanc if no background is provided
+	application(std::string _filename, bool _choose=false, std::string _backgroundfile="");
 	void run();
 
 private:
 	/* METHODS */
-	//read 'filename' file and put data in a 'data' vector
-	void read_data ();
+	//read 'file' file and put data in d vector //to be used for main data and background data //real and live time
+	void read_data (const std::string& file, std::vector<int>& d, std::string& t_live, std::string& t_real);
+
+
+	//if a background file is provided it removes the background data from the main data
+	void remove_background();
 	//create config file if non existent, read config file if existent
 	void get_config();
 	//to choose configuration of the peak
@@ -94,13 +98,15 @@ private:
 	//name self-explaining
 	void ROOT_stuff();
 
+	//self explaining
+	void wakeup_root();
 	/* MEMBERS */
-	//filename=file.Spe (data), fileconfname=file.config (peak configs)
-	std::string filename,fileconfname;
+	//filename=file.Spe (data), fileconfname=file.config (peak configs), file of backgraound data
+	std::string filename,fileconfname, backgroundfile;
 	//string with 'live time' and 'real time' of data collection
 	std::string time_real, time_live;
 	//data vector
-	std::vector<float> data;
+	std::vector<int> data;
 	//'true' if config file empty, otherwise 'false' //TEMP
 	bool config_empty;
 	//'true' if peak bounds are configured, otherwise 'false'
@@ -118,9 +124,11 @@ private:
 	//when 'true' launch the config choose menu, when 'false' wait before asking
 	bool ask;
 
+	//pause root for power saving
+	bool pause_root;
 	//threading stuff
-	std::mutex mut_ask, mut_refresh;
-	std::condition_variable cond;
+	std::mutex mut_ask, mut_refresh, mut_pause;
+	std::condition_variable cond, cond_pause;
 };
 
 #endif /*FUNCTIONS_H*/
