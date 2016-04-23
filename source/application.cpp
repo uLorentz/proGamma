@@ -12,8 +12,9 @@
 
 #include "functions.h"
 
-application::application(std::string _filename, bool _choose ) :
+application::application(std::string _filename, bool _choose, std::string _backgroundfile ) :
 	filename(_filename),
+	backgroundfile(_backgroundfile),	
 	configured(false),
 	ch1(0),
 	ch2(0),
@@ -21,9 +22,12 @@ application::application(std::string _filename, bool _choose ) :
 	refresh(false),
 	ask(false),
 	choose(_choose),
-	config_empty(true)	
+	config_empty(true),
+	pause_root(false)
 {
-	read_data(); //leggo i dati e riempio il vettore
+	read_data(filename, data,time_live, time_real ); //leggo i dati e riempio il vettore
+	if(!backgroundfile.empty())
+		remove_background();
 	get_config(); //controllo se le configurazioni ci sono
 }
 
@@ -105,12 +109,12 @@ void application::choose_config(){ //abbastanza autoesplicativo
 
 }
 
-void application::read_data (){
+void application::read_data (const std::string& file, std::vector<int>& d, std::string& t_live, std::string& t_real){
 	std::ifstream in;
-	in.open(filename.c_str()); //Apro canale in ingresso e controllo che tutto vada
+	in.open(file.c_str()); //Apro canale in ingresso e controllo che tutto vada
 
 	if(in.fail()){
-		std::cerr<< "Errore apertura canale in ingresso con il file ''"<<filename<< "''. Chiudo. " << std::endl;
+		std::cerr<< "Errore apertura canale in ingresso con il file ''"<<file<< "''. Chiudo. " << std::endl;
 		exit(2);
 	}
 	std::string temp; //stringa in cui buttare le righe prima del numero di bin
@@ -127,18 +131,40 @@ void application::read_data (){
 			break;
 	}
 	found2=times.find(" ");
-	time_live = times.substr(0,found2);
-	time_real = times.substr(found2+1);
+ 
+	t_live = times.substr(0,found2);
+	t_real = times.substr(found2+1);
 	unsigned int n; //numero di canali
 	in>>n>> n; //leggo due volte: nei file ho sempre uno 0 (che è?) e poi il numero di bin
 
 	//leggo i dati
-	data.resize(n);
+	d.resize(n);
 	for(int i=0; i<n; ++i)
-		in >> data[i];
+		in >> d[i];
 
 	in.close();
 }
+
+
+
+void application::remove_background(){
+	std::vector<int> back;
+	std::string back_live, back_real;
+	read_data (backgroundfile,back , back_live, back_real);
+
+	unsigned int bl=stoi(back_live);
+	unsigned int tl=stoi(time_live);
+        for(int i=0; i<back.size(); ++i)
+		back[i]=(int)(((double)back[i]/(double)bl)*tl);
+ 	for(int i=0;i<data.size(); ++i){
+                 data[i]-=back[i];
+                 if(data[i] < 0)
+                         data[i]=0;
+	}
+
+}
+
+
 
 void application::set_config(unsigned int canale1, unsigned int canale2){
 	std::ofstream out(fileconfname.c_str()); //apro canale in uscita con file di config
@@ -313,17 +339,27 @@ void application::ROOT_stuff(){
 			canvas2.Modified();
 			canvas2.Update();
 		}
-		//se sono arrivato qua dovrei avere tutte le canvas e la roba di root che è partita, è arrivato il momento di chiedere all'utente cosa vuole fare della sua vita
 
 		bool previously_configured=configured; //nel ciclo while (questo thread sta "aspettando") l'utente potrebbe cambiare le configurazioni con l'altro thread: se configured diventa true entro nell'if, ma non dovrei!, quindi mi salvo lo stato di configured prima che l'utente possa cambiarlo.
 		//un po' di roba di comunicazione tra thread
-		std::unique_lock<std::mutex> lk(mut_ask);
-	        ask=true; //il main thread può far comparire il menù
-	        cond.notify_all();
-		lk.unlock();
-		//to set up the fucking waiting sistem hoping this time will work
-		while (!refresh and stay_alive)
-			gSystem->ProcessEvents();
+		while(stay_alive and !refresh){
+			//se sono arrivato qua dovrei avere tutte le canvas e la roba di root che è partita, è arrivato il momento di chiedere all'utente cosa vuole fare della sua vita
+			std::unique_lock<std::mutex> lk(mut_ask);
+	      	 	ask=true; //il main thread può far comparire il menù
+	      		cond.notify_all();
+			lk.unlock();
+			
+			//finché sto nel while il systema di root processa e le canvas sono interattive
+			while (!refresh and stay_alive and !pause_root)
+				gSystem->ProcessEvents();
+			
+			//root è pausa, questo thread deve quindi smettere di lavorare: devo aspettare finché non mi si chiede di svegliarmi di novo
+			std::unique_lock<std::mutex> lk2(mut_pause);
+			cond_pause.wait(lk2, [this]{return !pause_root;}); //se pause root è true aspetto
+			lk2.unlock();	
+
+		}
+
 		if(previously_configured){ //per poterli ricreare al ciclo successivo
 			delete g1;
 			delete pp;
@@ -331,20 +367,32 @@ void application::ROOT_stuff(){
 		}
 
 		mut_refresh.lock();
-		refresh=false; //devo riportarlo indietro, se no si rischia di entrare in un loop infinito TODO aggiungere il controllo su mutex
+		refresh=false; //devo riportarlo indietro, se no si rischia di entrare in un loop infinito
 		mut_refresh.unlock();
 		delete gg; //OPZIONE 2
 	}
-//	delete gg; //OPZIONE 1
 }
+
+//per far svegliare root dalla pausa
+void application::wakeup_root(){
+	std::unique_lock<std::mutex> lk(mut_pause);
+	pause_root=false; //root può risvegliarsi
+	cond_pause.notify_all();
+	lk.unlock();
+}
+
 
 void application::run(){
 	std::thread root(&application::ROOT_stuff, this);
 	root.detach(); //lo rendo completamente indipendente dal main? O lo joino alla fine di run()?
 	short what; //answer to the question
 	bool processing=true; //controlla il loop del menù
+	//se true root va in pausa per power saving
+
+	
 
 	while(processing){
+		std::string str; //risposta dell'utente al menù
 
 		std::unique_lock<std::mutex> lk(mut_ask);
 		cond.wait(lk, [this]{return ask;});
@@ -353,54 +401,62 @@ void application::run(){
 		bool fine=false; //l'utente ha inserito correttamente la scelta
 		while(!fine){
 			// DIVIDO il caso in cui ci sono configurazioni precedenti e il caso in cui non ci sono
-			if(config_empty)
+			if(config_empty){
 				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire "
-					  <<  "\n\t(2) per terminare il programma." << std::endl;
-			
-
-
-			else
+					  <<  "\n\t(2) per terminare il programma" ;
+				if(pause_root)
+					std::cout << "\n\t(r) per far ripartire ROOT (per grafici interattivi)." << std::endl;
+				else	
+					std::cout << "\n\t(p) per mettere in pausa ROOT (per power saving). " <<std::endl;
+			}
+			else{
 				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire "
 			 		  << "un fit;\n\t(2) per scegliere una configurazione precedentemente"
-					  <<  " usata;\n\t(3) per terminare il programma." << std::endl;
-			
+					  <<  " usata;\n\t(3) per terminare il programma";
+				if(pause_root)
+					std::cout << "\n\t(r) per far ripartire ROOT (per grafici interattivi)." << std::endl;
+				else	
+					std::cout << "\n\t(p) per mettere in pausa ROOT (per power saving). " <<std::endl;
+			}
 
 
 			std::cout << "Inserisci: ";
 			fine=true;
-			//TODO se nel buffer di cin c'è qualcosa lo getline lo legge, bisogna svuotare competamente cin, come fare?
-			std::cin.clear(); //pulisco eventiali flag di errore
-			std::fflush(stdin); //svuoto lo stream
-			std::string str;
 			getline( std::cin, str);
-			if(str.empty())
-				fine=false;
-			try{
-				what=std::stoi(str);
-			}
-			catch(const std::invalid_argument& ia){
-				fine=false;
-			}
-
-
-
 			
-			if(!config_empty){
-				if(!fine or (what<1 or what>3)){
-					fine=false; //se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
-					std::cout << "\n\n\nATTENZIONE: scelta non valida! Inserisci correttamente! \n" << std::endl;
+			//se l'utente non ha inserito p o r
+			if(str!="r" and str!="p"){
+				if(str.empty())
+					fine=false;
+				try{
+					what=std::stoi(str);
+				}
+				catch(const std::invalid_argument& ia){
+					fine=false;
+				}
+	
+				if(!config_empty){
+					if(!fine or (what<1 or what>3)){
+						fine=false; //se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
+						std::cout << "\n\n\nATTENZIONE: scelta non valida! Inserisci correttamente! \n" << std::endl;
+					}
+				}
+				else{
+					if(!fine or (what<1 or what>2)){
+						fine=false; //se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
+						std::cout << "\n\n\nATTENZIONE: scelta non valida! Inserisci correttamente! \n" << std::endl;
+					}
+					if(what==2)
+						what++;
 				}
 			}
-			else{
-				if(!fine or (what<1 or what>2)){
-					fine=false; //se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
-					std::cout << "\n\n\nATTENZIONE: scelta non valida! Inserisci correttamente! \n" << std::endl;
-				}
-				if(what==2)
-					what++;
+			else{ //r o p
+				what=0; //così non entro in uno degli "if" sbagliati
+				if(str=="r")
+					wakeup_root(); //sveglia!
+				else 
+					pause_root=true;
 			}
-
-
 
 		}
 		if(what==1){
@@ -414,12 +470,16 @@ void application::run(){
 			mut_refresh.lock();
 			refresh=true; //dico a root di aggiornare i fit e le canvas
 			mut_refresh.unlock();
+			if(pause_root) //se root è in pausa lo sveglio
+				wakeup_root();
 		}
 		if(what==2){
 			choose_config();
 			mut_refresh.lock();
 			refresh=true; //dico a root di aggiornare i fit e le canvas
 			mut_refresh.unlock();
+			if(pause_root) //se root è in pausa lo sveglio
+				wakeup_root();
 		}
 		if(what==3){
 			std::cout<< std::endl << "ATTENZIONE: riceverai un sacco di insulti"
@@ -427,7 +487,11 @@ void application::run(){
 			sleep(2);
 			stay_alive=false;
 			processing=false;
+			if(pause_root) //se root è in pausa lo sveglio
+				wakeup_root();
 		}
-		ask=false;
+		if(!pause_root) //se root è in una di queste due configurazioni non posso settare ask su false, se no mi inchiodo in una deadlock nel thread di root
+			ask=false;
+		std::cout << std::endl << std::endl; //lascio un po' di spazio
 	}
 }
