@@ -14,9 +14,9 @@
 
 application::application(std::string _filename, bool _choose, std::string _backgroundfile ) :
 	filename(_filename),
-	backgroundfile(_backgroundfile),	
+	backgroundfile(_backgroundfile),
 	configured(false),
-	ch1(0),
+	ch1(0), //TODO  non ha più molto senso che siano inizializzate a 0, togliere?
 	ch2(0),
 	stay_alive(true),
 	refresh(false),
@@ -25,10 +25,13 @@ application::application(std::string _filename, bool _choose, std::string _backg
 	config_empty(true),
 	pause_root(false)
 {
-	read_data(filename, data,time_live, time_real ); //leggo i dati e riempio il vettore
+	//read data from file and fill the vector
+	read_data(filename, data, time_live, time_real );
+	//if background data file exists, remove the background
 	if(!backgroundfile.empty())
 		remove_background();
-	get_config(); //controllo se le configurazioni ci sono
+	//check if configs exist, and read them
+	get_config();
 }
 
 void application::get_config() {
@@ -53,7 +56,7 @@ void application::get_config() {
 		fileconfig.close();
 		configured=false;
 	}
-	// provo ad aggiungere un else if, nel caso in cui sia vuoto il file di conf //TEMP
+	// provo ad aggiungere un else if, nel caso in cui sia vuoto il file di conf
 	else if (fileconfig.peek() == std::ifstream::traits_type::eof()) {
 		fileconfig.close();
 		config_empty=true;
@@ -74,16 +77,21 @@ void application::get_config() {
 			ch1=bins.back().left;
 			ch2=bins.back().right;
 		}
-		if(ch1!=ch2) //se sono diversi allora ho le configurazioni del picco TODO inutile ora?
+		//a control layer it's never useless
+		//this checks if the configured size of the peak it's not wrong
+		if(ch1<ch2)
 			configured=true;
-		else //se sono uguali non ho le configurazioni
+		else
+			std::cout << "Configurazione picco errata, provare a cancellare i "
+				"file di configurazione e ripetere l'operazione." << std::endl;
 			configured=false;
 		fileconfig.close();
 	}
 }
 
 void application::choose_config(){ //abbastanza autoesplicativo
-	std::cout << "\nLe configurazioni di canali per i fit trovate sono le seguenti: " << std::endl;
+	std::cout << "\nLe configurazioni di canali per i fit trovate sono le "
+		"seguenti: " << std::endl;
 	for(unsigned int i=0;i<bins.size(); ++i){
 		std::cout << i+1<< "): \n";
 		std::cout << "\t"<<bins[i].left<< "\t" << bins[i].right << std::endl;
@@ -98,21 +106,24 @@ void application::choose_config(){ //abbastanza autoesplicativo
 		answ=std::stoi(str);
 	}
 	catch(const std::invalid_argument& ia){
-		std::cout << "\n\n\nATTENZIONE: hai inserito una scelta non valida. Prova di nuovo! \n" << std::endl;
+		std::cout << "\n\n\nATTENZIONE: hai inserito una scelta non valida. "
+			"Prova di nuovo! \n" << std::endl;
 		choose_config();
 		return;
 	}
 	if(answ==0) //setto all'ultimo (l'utente ha schiacciato invio)
 		answ=bins.size();
 	//swappo quello da usare con l'ultimo e scrivo sul file config
-	set_config(bins[answ-1].left, bins[answ-1].right); //potrei (per performance, questa funzione si mette a ricercare da capo, un sacco di overhead) scrivere qui quello che devo fare (swappare le conf e scrivere su file), ma per comodità uso la funz. già fatta
-
+	set_config(bins[answ-1].left, bins[answ-1].right);
+	//potrei (per performance, questa funzione si mette a ricercare da capo,
+	//un sacco di overhead) scrivere qui quello che devo fare (swappare le
+	//conf e scrivere su file), ma per comodità uso la funz. già fatta
 }
 
-void application::read_data (const std::string& file, std::vector<int>& d, std::string& t_live, std::string& t_real){
+void application::read_data (const std::string& file, std::vector<int>& d,
+								std::string& t_live, std::string& t_real){
 	std::ifstream in;
 	in.open(file.c_str()); //Apro canale in ingresso e controllo che tutto vada
-
 	if(in.fail()){
 		std::cerr<< "Errore apertura canale in ingresso con il file ''"<<file<< "''. Chiudo. " << std::endl;
 		exit(2);
@@ -120,6 +131,7 @@ void application::read_data (const std::string& file, std::vector<int>& d, std::
 	std::string temp; //stringa in cui buttare le righe prima del numero di bin
 	std::string times; //stringa temporanea per i tempi
 	std::size_t found=0, found2=0;
+
 	for(;;){
 		getline(in, temp);
 		found2=temp.find("$MEAS_TIM:"); //cerco i tempi live e real
@@ -131,7 +143,6 @@ void application::read_data (const std::string& file, std::vector<int>& d, std::
 			break;
 	}
 	found2=times.find(" ");
- 
 	t_live = times.substr(0,found2);
 	t_real = times.substr(found2+1);
 	unsigned int n; //numero di canali
@@ -145,67 +156,65 @@ void application::read_data (const std::string& file, std::vector<int>& d, std::
 	in.close();
 }
 
-
-
 void application::remove_background(){
 	std::vector<int> back;
 	std::string back_live, back_real;
-	read_data (backgroundfile,back , back_live, back_real);
+	read_data (backgroundfile, back, back_live, back_real);
 
 	unsigned int bl=stoi(back_live);
 	unsigned int tl=stoi(time_live);
-        for(int i=0; i<back.size(); ++i)
+	for(int i=0; i<back.size(); ++i)
 		back[i]=(int)(((double)back[i]/(double)bl)*tl);
- 	for(int i=0;i<data.size(); ++i){
-                 data[i]-=back[i];
-                 if(data[i] < 0)
-                         data[i]=0;
+	for(int i=0;i<data.size(); ++i){
+		data[i]-=back[i];
+		if(data[i] < 0)
+			data[i]=0;
 	}
-
 }
 
-
-
 void application::set_config(unsigned int canale1, unsigned int canale2){
-	std::ofstream out(fileconfname.c_str()); //apro canale in uscita con file di config
+	bool valid_config;
 	if(canale1>canale2){ //non ha senso
-		std::cout << "You have inserted a non valid channel configuration. Unconfiguring..." << std::endl;
-		canale1=0;
-		canale2=0;
+		std::cout << "Non è una configurazione valida per il picco, verrà "
+			"chiesto di ripetere la configurazione." << std::endl;
+		valid_config=false;
 	}
-	//controllo che il canale funzioni
-	if(out.fail()){
-		std::cerr <<"File out ''" << fileconfname <<"'' error."<< std::endl;
-		exit(4);
-	}
-	bool add=true; //potrei usare un goto.... ma evitiamo vah!
-	for(unsigned int i=0;i<bins.size();++i){ //ricerco se ho già usato queste configurazioni in precedenza
-		if(bins[i].left==canale1 && bins[i].right==canale2){
-			bin_config temp=bins[i];
-			bins[i]=bins.back();
-			bins[bins.size()-1]=temp;
-			add=false; //mi salto il prossimo if dopo il for
-			break;
+	else
+		valid_config=true;
+
+	if (valid_config) {
+		std::ofstream out(fileconfname.c_str()); //apro canale in uscita con file di config
+		//controllo che il canale funzioni
+		if(out.fail()){
+			std::cerr <<"File out ''" << fileconfname <<"'' error."<< std::endl;
+			exit(4);
 		}
-	}
-	if(add){ //configurazione mai usata in precedenza
-		bin_config temp;
-		temp.left=canale1;
-		temp.right=canale2;
-		bins.push_back(temp);
-	}
+		bool add=true; //potrei usare un goto.... ma evitiamo vah!
+		for(unsigned int i=0;i<bins.size();++i){ //ricerco se ho già usato queste configurazioni in precedenza
+			if(bins[i].left==canale1 && bins[i].right==canale2){
+				bin_config temp=bins[i];
+				bins[i]=bins.back();
+				bins[bins.size()-1]=temp;
+				add=false; //mi salto il prossimo if dopo il for
+				break;
+			}
+		}
+		if(add){ //configurazione mai usata in precedenza
+			bin_config temp;
+			temp.left=canale1;
+			temp.right=canale2;
+			bins.push_back(temp);
+		}
 
-	ch1=canale1;
-	ch2=canale2;
-	for(unsigned int i =0; i<bins.size(); ++i)
-		//potrei usare un append, ma come gestisco la situazione dello swap precedente?
-		out << bins[i].left << std::endl << bins[i].right << std::endl;
-
-	out.close();
-	config_empty=false; //TEMP
-
-	if(ch1!=ch2) //ho un picco da fittare
+		ch1=canale1;
+		ch2=canale2;
+		for(unsigned int i =0; i<bins.size(); ++i)
+			//potrei usare un append, ma come gestisco la situazione dello swap precedente?
+			out << bins[i].left << std::endl << bins[i].right << std::endl;
+		out.close();
+		config_empty=false;
 		configured=true;
+	}
 	else
 		configured=false;
 }
@@ -222,12 +231,12 @@ void application::ROOT_stuff(){
 	gStyle->SetOptFit(111111);
 
 	//OPZIONE 1: più performante ma se non unzoommo va in crash
-/*	TH1F* gg=new TH1F("gg", " spettro", data.size(), 0.,data.size());
+	/*	TH1F* gg=new TH1F("gg", " spettro", data.size(), 0.,data.size());
 
 	//riempio il grafico e stampo tutto (devo farlo una sola volta, non ho bisogno del loop)
 	for (unsigned int i=0; i<data.size(); i++)
-		gg->SetBinContent(i, data[i]);
-*/
+	gg->SetBinContent(i, data[i]);
+	*/
 
 	while(stay_alive){
 
@@ -238,7 +247,10 @@ void application::ROOT_stuff(){
 			gg->SetBinContent(i, data[i]);
 
 		if(!configured){
-			std::cout << std::endl << "Nessuna configurazione dei canali per il fit trovata, analizzare il grafico ed inserire i canali scegliendo (1). " <<std::endl;
+			std::cout << "Non è stata trovata alcuna configurazione dei canali "
+				"per il fit, oppure la configurazione inserita non è valida; "
+				"analizzare il grafico ed inserire i canali scegliendo (1)."
+				<< std::endl;
 			canvas3.Modified();
 			canvas3.Update();
 			canvas4.Modified();
@@ -276,7 +288,7 @@ void application::ROOT_stuff(){
 				std::endl << std::endl;
 			total->SetParameters(par);
 			total->SetLineColor(6);
-		  	gg->Fit(total,"R+","",ch1,ch2);
+			gg->Fit(total,"R+","",ch1,ch2);
 
 			total->GetParameters(&par[0]);
 			errpar[0]=total->GetParError(0);
@@ -345,19 +357,18 @@ void application::ROOT_stuff(){
 		while(stay_alive and !refresh){
 			//se sono arrivato qua dovrei avere tutte le canvas e la roba di root che è partita, è arrivato il momento di chiedere all'utente cosa vuole fare della sua vita
 			std::unique_lock<std::mutex> lk(mut_ask);
-	      	 	ask=true; //il main thread può far comparire il menù
-	      		cond.notify_all();
+			ask=true; //il main thread può far comparire il menù
+			cond.notify_all();
 			lk.unlock();
-			
+
 			//finché sto nel while il systema di root processa e le canvas sono interattive
 			while (!refresh and stay_alive and !pause_root)
 				gSystem->ProcessEvents();
-			
+
 			//root è pausa, questo thread deve quindi smettere di lavorare: devo aspettare finché non mi si chiede di svegliarmi di novo
 			std::unique_lock<std::mutex> lk2(mut_pause);
 			cond_pause.wait(lk2, [this]{return !pause_root;}); //se pause root è true aspetto
-			lk2.unlock();	
-
+			lk2.unlock();
 		}
 
 		if(previously_configured){ //per poterli ricreare al ciclo successivo
@@ -381,15 +392,12 @@ void application::wakeup_root(){
 	lk.unlock();
 }
 
-
 void application::run(){
 	std::thread root(&application::ROOT_stuff, this);
 	root.detach(); //lo rendo completamente indipendente dal main? O lo joino alla fine di run()?
 	short what; //answer to the question
 	bool processing=true; //controlla il loop del menù
 	//se true root va in pausa per power saving
-
-	
 
 	while(processing){
 		std::string str; //risposta dell'utente al menù
@@ -402,28 +410,31 @@ void application::run(){
 		while(!fine){
 			// DIVIDO il caso in cui ci sono configurazioni precedenti e il caso in cui non ci sono
 			if(config_empty){
-				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire "
-					  <<  "\n\t(2) per terminare il programma" ;
+				std::cout << "Premi:\n\t(1) per configurare i canali ed "
+					"eseguire un fit;\n\t(2) per terminare il programma;" ;
 				if(pause_root)
-					std::cout << "\n\t(r) per far ripartire ROOT (per grafici interattivi)." << std::endl;
-				else	
-					std::cout << "\n\t(p) per mettere in pausa ROOT (per power saving). " <<std::endl;
+					std::cout << "\n\t(r) per far ripartire ROOT (per grafici "
+						"interattivi)." << std::endl;
+				else
+					std::cout << "\n\t(p) per mettere in pausa ROOT "
+						"(per power saving). " <<std::endl;
 			}
 			else{
-				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire "
-			 		  << "un fit;\n\t(2) per scegliere una configurazione precedentemente"
-					  <<  " usata;\n\t(3) per terminare il programma";
+				std::cout << "Premi:\n\t(1) per configurare i canali ed "
+					"eseguire un fit;\n\t(2) per scegliere una configurazione "
+					"precedentemente usata;\n\t(3) per terminare il programma";
 				if(pause_root)
-					std::cout << "\n\t(r) per far ripartire ROOT (per grafici interattivi)." << std::endl;
-				else	
-					std::cout << "\n\t(p) per mettere in pausa ROOT (per power saving). " <<std::endl;
+					std::cout << "\n\t(r) per far ripartire ROOT (per grafici "
+						"interattivi)." << std::endl;
+				else
+					std::cout << "\n\t(p) per mettere in pausa ROOT "
+						"(per power saving). " <<std::endl;
 			}
-
 
 			std::cout << "Inserisci: ";
 			fine=true;
 			getline( std::cin, str);
-			
+
 			//se l'utente non ha inserito p o r
 			if(str!="r" and str!="p"){
 				if(str.empty())
@@ -434,17 +445,22 @@ void application::run(){
 				catch(const std::invalid_argument& ia){
 					fine=false;
 				}
-	
+
 				if(!config_empty){
 					if(!fine or (what<1 or what>3)){
-						fine=false; //se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
-						std::cout << "\n\n\nATTENZIONE: scelta non valida! Inserisci correttamente! \n" << std::endl;
+						//se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
+						fine=false;
+						std::cout << "\n\n\nATTENZIONE: scelta non valida! "
+							"Inserisci una tra le opzioni disponibili! \n"
+							<< std::endl;
 					}
 				}
 				else{
 					if(!fine or (what<1 or what>2)){
-						fine=false; //se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
-						std::cout << "\n\n\nATTENZIONE: scelta non valida! Inserisci correttamente! \n" << std::endl;
+						//se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
+						fine=false;
+						std::cout << "\n\n\nATTENZIONE: scelta non valida! "
+							"Inserisci una tra le opzioni disponibili! \n" << std::endl;
 					}
 					if(what==2)
 						what++;
@@ -454,17 +470,16 @@ void application::run(){
 				what=0; //così non entro in uno degli "if" sbagliati
 				if(str=="r")
 					wakeup_root(); //sveglia!
-				else 
+				else
 					pause_root=true;
 			}
-
 		}
 		if(what==1){
 			std::cout << "Inserisci i nuovi canali.\n";
 			std::cout << "Ch1: ";
-			std::cin >>ch1;
+			std::cin >> ch1;
 			std::cout << "Ch2: ";
-			std::cin>> ch2;
+			std::cin >> ch2;
 			std::cin.ignore(); //rimuovo gli "a capo"
 			set_config(ch1, ch2);
 			mut_refresh.lock();
@@ -492,6 +507,6 @@ void application::run(){
 		}
 		if(!pause_root) //se root è in una di queste due configurazioni non posso settare ask su false, se no mi inchiodo in una deadlock nel thread di root
 			ask=false;
-		std::cout << std::endl << std::endl; //lascio un po' di spazio
+		std::cout << std::endl; //lascio un po' di spazio
 	}
 }
