@@ -12,75 +12,38 @@
 
 #include "functions.h"
 
-application::application(std::string _filename, bool _choose, std::string _backgroundfile ) :
-	filename(_filename),
-	backgroundfile(_backgroundfile),	
-	configured(false),
+application::application(std::string filename,  std::string backgroundfile ) :
+	
+	signal(filename, data, data_times),
+
 	ch1(0),
 	ch2(0),
 	stay_alive(true),
 	refresh(false),
 	ask(false),
-	choose(_choose),
-	config_empty(true),
+	config_empty(false),
 	pause_root(false)
 {
-	read_data(filename, data,time_live, time_real ); //leggo i dati e riempio il vettore
-	if(!backgroundfile.empty())
-		remove_background();
-	get_config(); //controllo se le configurazioni ci sono
+	signal.get_config(bins);
+	if(bins.empty() or (bins.size()==1 and bins[0].left==0 and bins[0].right==0)){
+		if(bins.empty()) //TODO non ricordo: a cosa diavolo serviva config empty? o comunque cosa diavolo cambia da configured?
+			config_empty=true;
+		configured=false;
+		ch1=0; //in realtà è ridondante 
+		ch2=0; //idem
+	}
+	else{ //uso l'ultima configurazione usata
+		configured=true;
+		ch1=bins.back().left;
+		ch2=bins.back().right;
+	}
+	
+	if(backgroundfile!=""){
+		dataget back(backgroundfile, background, back_times); //la classe back può morire anche qui, non mi serve più poi (non ha file di configurazione)
+	}
+	
 }
 
-void application::get_config() {
-	//creo il filename "nomefile.config" con le configurazioni dei bin o, se esiste, lo leggo
-	std::size_t pos=filename.find(".Spe");
-	fileconfname=filename;
-	fileconfname.erase(pos, filename.length());
-	fileconfname="./configure_files/"+fileconfname+".config"; //nella cartella configure_files
-
-	//apro un canale in ingresso "filename.config"
-	std::fstream fileconfig;
-	fileconfig.open(fileconfname, std::fstream::in);
-	//se non esiste allora lo chuido, ne apro uno in uscita (per creare il file) e lo riempio con due zeri
-	if(fileconfig.fail()){
-		fileconfig.close();
-		fileconfig.open(fileconfname, std::fstream::out);
-		if(fileconfig.fail()){
-			std::cerr <<"File out ''" << fileconfname <<"'' error."<< std::endl;
-			exit(3);
-		}
-		//riempio con due zeri il file ma la flag "configured" rimane su false, non ho i canali del picco
-		fileconfig.close();
-		configured=false;
-	}
-	// provo ad aggiungere un else if, nel caso in cui sia vuoto il file di conf //TEMP
-	else if (fileconfig.peek() == std::ifstream::traits_type::eof()) {
-		fileconfig.close();
-		config_empty=true;
-		configured=false;
-	}
-	else{ //il file esiste, leggo i valori
-		config_empty=false;
-		bin_config temp; //variabile temporanea in cui leggere
-		for(;;){ //leggo tutte le configurazioni
-			fileconfig>>temp.left >>temp.right;
-			if(fileconfig.eof())
-				break;
-			bins.push_back(temp);
-		}
-		if(choose) //l'utente ha chiesto di poter scegliere
-			choose_config();
-		else{ //uso l'ultima configurazione usata
-			ch1=bins.back().left;
-			ch2=bins.back().right;
-		}
-		if(ch1!=ch2) //se sono diversi allora ho le configurazioni del picco TODO inutile ora?
-			configured=true;
-		else //se sono uguali non ho le configurazioni
-			configured=false;
-		fileconfig.close();
-	}
-}
 
 void application::choose_config(){ //abbastanza autoesplicativo
 	std::cout << "\nLe configurazioni di canali per i fit trovate sono le seguenti: " << std::endl;
@@ -109,74 +72,11 @@ void application::choose_config(){ //abbastanza autoesplicativo
 
 }
 
-void application::read_data (const std::string& file, std::vector<int>& d, std::string& t_live, std::string& t_real){
-	std::ifstream in;
-	in.open(file.c_str()); //Apro canale in ingresso e controllo che tutto vada
-
-	if(in.fail()){
-		std::cerr<< "Errore apertura canale in ingresso con il file ''"<<file<< "''. Chiudo. " << std::endl;
-		exit(2);
-	}
-	std::string temp; //stringa in cui buttare le righe prima del numero di bin
-	std::string times; //stringa temporanea per i tempi
-	std::size_t found=0, found2=0;
-	for(;;){
-		getline(in, temp);
-		found2=temp.find("$MEAS_TIM:"); //cerco i tempi live e real
-		if(found2!=std::string::npos)
-			getline(in, times);
-
-		found=temp.find("$DATA:"); //cerco la fine dell'header del file, dopo iniziano i dati
-		if(found!=std::string::npos)
-			break;
-	}
-	found2=times.find(" ");
- 
-	t_live = times.substr(0,found2);
-	t_real = times.substr(found2+1);
-	unsigned int n; //numero di canali
-	in>>n>> n; //leggo due volte: nei file ho sempre uno 0 (che è?) e poi il numero di bin
-
-	//leggo i dati
-	d.resize(n);
-	for(int i=0; i<n; ++i)
-		in >> d[i];
-
-	in.close();
-}
-
-
-
-void application::remove_background(){
-	std::vector<int> back;
-	std::string back_live, back_real;
-	read_data (backgroundfile,back , back_live, back_real);
-
-	unsigned int bl=stoi(back_live);
-	unsigned int tl=stoi(time_live);
-        for(int i=0; i<back.size(); ++i)
-		back[i]=(int)(((double)back[i]/(double)bl)*tl);
- 	for(int i=0;i<data.size(); ++i){
-                 data[i]-=back[i];
-                 if(data[i] < 0)
-                         data[i]=0;
-	}
-
-}
-
-
-
 void application::set_config(unsigned int canale1, unsigned int canale2){
-	std::ofstream out(fileconfname.c_str()); //apro canale in uscita con file di config
-	if(canale1>canale2){ //non ha senso
+	if(canale1>=canale2){ //non ha senso
 		std::cout << "You have inserted a non valid channel configuration. Unconfiguring..." << std::endl;
 		canale1=0;
 		canale2=0;
-	}
-	//controllo che il canale funzioni
-	if(out.fail()){
-		std::cerr <<"File out ''" << fileconfname <<"'' error."<< std::endl;
-		exit(4);
 	}
 	bool add=true; //potrei usare un goto.... ma evitiamo vah!
 	for(unsigned int i=0;i<bins.size();++i){ //ricerco se ho già usato queste configurazioni in precedenza
@@ -197,18 +97,32 @@ void application::set_config(unsigned int canale1, unsigned int canale2){
 
 	ch1=canale1;
 	ch2=canale2;
-	for(unsigned int i =0; i<bins.size(); ++i)
-		//potrei usare un append, ma come gestisco la situazione dello swap precedente?
-		out << bins[i].left << std::endl << bins[i].right << std::endl;
 
-	out.close();
+	signal.writeconfig(bins);
 	config_empty=false; //TEMP
-
-	if(ch1!=ch2) //ho un picco da fittare
-		configured=true;
-	else
-		configured=false;
+	configured=true;
 }
+/*
+
+void application::remove_background(){
+	std::vector<int> back;
+	std::string back_live, back_real;
+	read_data (backgroundfile,back , back_live, back_real);
+
+	unsigned int bl=stoi(back_live);
+	unsigned int tl=stoi(time_live);
+        for(int i=0; i<back.size(); ++i)
+		back[i]=(int)(((double)back[i]/(double)bl)*tl);
+ 	for(int i=0;i<data.size(); ++i){
+                 data[i]-=back[i];
+                 if(data[i] < 0)
+                         data[i]=0;
+	}
+
+}
+
+
+
 
 void application::ROOT_stuff(){
 	//dichiaro tutte le varibili di root all'inizio per poter entrare nel loop senza problemi
@@ -221,13 +135,6 @@ void application::ROOT_stuff(){
 	gStyle->SetOptStat(111111111);
 	gStyle->SetOptFit(111111);
 
-	//OPZIONE 1: più performante ma se non unzoommo va in crash
-/*	TH1F* gg=new TH1F("gg", " spettro", data.size(), 0.,data.size());
-
-	//riempio il grafico e stampo tutto (devo farlo una sola volta, non ho bisogno del loop)
-	for (unsigned int i=0; i<data.size(); i++)
-		gg->SetBinContent(i, data[i]);
-*/
 
 	while(stay_alive){
 
@@ -494,4 +401,4 @@ void application::run(){
 			ask=false;
 		std::cout << std::endl << std::endl; //lascio un po' di spazio
 	}
-}
+}*/

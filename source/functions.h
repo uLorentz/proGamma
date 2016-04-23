@@ -32,11 +32,10 @@
 #include "TGraphErrors.h"
 #include "TF1.h"
 #include "TStyle.h"
-//#include "TObjArray.h"
-//#include "TRandom.h"
 #include "TApplication.h"
 #include "TSystem.h"
 
+/******** MANAGE_FLAGS ********/
 //Works only with "application" class
 class manage_flags{
 public:
@@ -65,30 +64,73 @@ private:
 	bool config;
 };
 
+
+/******** BIN_CONFIG *********/
 //structure containing fit bounds
 struct bin_config{
 	int left;
 	int right;
 };
 
+
+/******** TIMES *********/
+struct times{
+	std::string live;
+	std::string real;
+};
+
+
+
+/******** DATAGET *********/
+//I commenti ai metodi verranno poi... ora sto cercando di far funzionare tutto...
+class dataget{
+public:
+	//in ingresso il nome del file, il vettore coi dati e la struct coi tempi in cui salvare tutto	
+	dataget(std::string _filename, std::vector<int>& data, times& t);
+	//legge le config da file
+	void get_config(std::vector<bin_config>& bins);
+	//scrive il vettore config su file
+	void writeconfig(const std::vector<bin_config> &bins);
+private:
+	std::string filename, fileconfname;
+	
+	//legge i dati
+	void read_data (std::vector<int>& data, std::string& t_live, std::string& t_real);
+};
+
+
+/******** ROOTING *********/
+class rooting{
+public:
+	rooting(std::vector<int>& data, times tdat, bin_config config, std::vector<int> & fondo, times tfon, short canvas_type);
+private:
+
+
+};
+
+
+
+
+//TODO TODO TODO TODO //
+// TUtta la parte del configured e empty config!
+
+
+
+/******** APPLICATION *********/
 //the "proGamma" itself
 class application{
 public:
 	//name of '.Spe' file. 'choose=false' if you want to use the last config,
 	//'choose=true' if you want to choose from all existent configs. //backgroundfile: leave blanc if no background is provided
-	application(std::string _filename, bool _choose=false, std::string _backgroundfile="");
+	application(std::string filename,  std::string backgroundfile="");
 	void run();
 
 private:
 	/* METHODS */
-	//read 'file' file and put data in d vector //to be used for main data and background data //real and live time
-	void read_data (const std::string& file, std::vector<int>& d, std::string& t_live, std::string& t_real);
 
 
 	//if a background file is provided it removes the background data from the main data
 	void remove_background();
-	//create config file if non existent, read config file if existent
-	void get_config();
 	//to choose configuration of the peak
 	void choose_config();
 
@@ -100,17 +142,23 @@ private:
 
 	//self explaining
 	void wakeup_root();
+
+
+
+
 	/* MEMBERS */
-	//filename=file.Spe (data), fileconfname=file.config (peak configs), file of backgraound data
-	std::string filename,fileconfname, backgroundfile;
+	dataget signal; // signal 
+
 	//string with 'live time' and 'real time' of data collection
-	std::string time_real, time_live;
-	//data vector
-	std::vector<int> data;
-	//'true' if config file empty, otherwise 'false' //TEMP
-	bool config_empty;
+	times data_times, back_times;
+
+
+
+	//data vector and background
+	std::vector<int> data, background;
 	//'true' if peak bounds are configured, otherwise 'false'
 	bool configured;
+	bool config_empty;
 	//'true' if user want to chose a particular config, otherwise 'false'
 	bool choose;
 	//peak fit bounds
