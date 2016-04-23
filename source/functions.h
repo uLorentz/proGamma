@@ -75,17 +75,19 @@ struct bin_config{
 class application{
 public:
 	//name of '.Spe' file. 'choose=false' if you want to use the last config,
-	//'choose=true' if you want to choose from all existent configs. //backgroundfile: leave blanc if no background is provided
+	//'choose=true' if you want to choose from all existent configs. 
+	//backgroundfile: leave blanc if no background is provided
 	application(std::string _filename, bool _choose=false, std::string _backgroundfile="");
 	void run();
 
 private:
 	/* METHODS */
-	//read 'file' file and put data in d vector //to be used for main data and background data //real and live time
-	void read_data (const std::string& file, std::vector<int>& d, std::string& t_live, std::string& t_real);
+	//read 'file' file and put data in d vector 
+	//to be used for main data and background data //real and live time
+	void read_data (const std::string& file, std::vector<int>& d, 
+					std::string& t_live, std::string& t_real);
 
-
-	//if a background file is provided it removes the background data from the main data
+	//if a background file is provided it removes the background from the data
 	void remove_background();
 	//create config file if non existent, read config file if existent
 	void get_config();
@@ -100,6 +102,7 @@ private:
 
 	//self explaining
 	void wakeup_root();
+
 	/* MEMBERS */
 	//filename=file.Spe (data), fileconfname=file.config (peak configs), file of backgraound data
 	std::string filename,fileconfname, backgroundfile;
@@ -107,7 +110,7 @@ private:
 	std::string time_real, time_live;
 	//data vector
 	std::vector<int> data;
-	//'true' if config file empty, otherwise 'false' //TEMP
+	//'true' if config file empty, otherwise 'false' 
 	bool config_empty;
 	//'true' if peak bounds are configured, otherwise 'false'
 	bool configured;

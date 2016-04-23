@@ -13,10 +13,10 @@ Per informazioni sull'utilizzo di `proGamma` lanciare `./proGamma --help`
 
 ### Autori
 
-proGamma è stato scritto da:                            
-    Lorenzo Uboldi <lorenzo.uboldi@studenti.unimi.it> 
+proGamma è stato scritto da:
+    Lorenzo Uboldi <lorenzo.uboldi@studenti.unimi.it>
 
-con il contributo di:     
-    Pietro F. Fontana <pietrofrancesco.fontana@studenti.unimi.it>    
+con il contributo di:
+    Pietro F. Fontana <pietrofrancesco.fontana@studenti.unimi.it>
 
-ed è distribuito secondo la GNU GENERAL PUBLIC LICENSE 3.0. 
+ed è distribuito secondo la GNU GENERAL PUBLIC LICENSE 3.0.
