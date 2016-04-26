@@ -12,18 +12,22 @@
 
 #include "functions.h"
 
-application::application(std::string filename,  std::string backgroundfile ) :
+application::application(std::string filename,  std::string backgroundfile, std::string _type ) :
 	
-	signal(filename, data, data_times),
+	signal(filename),
 
+	type(_type),
 	ch1(0),
 	ch2(0),
 	stay_alive(true),
 	refresh(false),
 	ask(false),
 	config_empty(false),
-	pause_root(false)
+	pause_root(false),
+	background_removed(false)
 {
+
+	signal.read_data(data, data_times);
 	signal.get_config(bins);
 	if(bins.empty() or (bins.size()==1 and bins[0].left==0 and bins[0].right==0)){
 		if(bins.empty()) //TODO non ricordo: a cosa diavolo serviva config empty? o comunque cosa diavolo cambia da configured?
@@ -38,8 +42,10 @@ application::application(std::string filename,  std::string backgroundfile ) :
 		ch2=bins.back().right;
 	}
 	
-	if(backgroundfile!=""){
-		dataget back(backgroundfile, background, back_times); //la classe back può morire anche qui, non mi serve più poi (non ha file di configurazione)
+	if(backgroundfile!=""){ //allora ho dati del fondo da caricare
+		dataget back(backgroundfile); //la classe back può morire anche qui, non mi serve più poi (non ha file di configurazione)
+		back.read_data(background, back_times);
+		remove_background();	
 	}
 	
 }
@@ -102,153 +108,58 @@ void application::set_config(unsigned int canale1, unsigned int canale2){
 	config_empty=false; //TEMP
 	configured=true;
 }
-/*
 
 void application::remove_background(){
-	std::vector<int> back;
-	std::string back_live, back_real;
-	read_data (backgroundfile,back , back_live, back_real);
-
-	unsigned int bl=stoi(back_live);
-	unsigned int tl=stoi(time_live);
-        for(int i=0; i<back.size(); ++i)
-		back[i]=(int)(((double)back[i]/(double)bl)*tl);
+	double back_time=std::stoi(back_times.live);
+	double data_time=std::stoi(data_times.live);
+	//normalizzo ai tempi di data
+        for(int i=0; i<background.size(); ++i)
+		background[i]=(int)(((double)background[i]/(double)back_time)*data_time);
+	data_cleaned.resize(data.size());
  	for(int i=0;i<data.size(); ++i){
-                 data[i]-=back[i];
-                 if(data[i] < 0)
-                         data[i]=0;
+                 data_cleaned[i]=data[i]-background[i];
+                 if(data_cleaned[i] < 0)
+                         data_cleaned[i]=0;
 	}
+	background_removed=true;
 
 }
 
-
-
-
 void application::ROOT_stuff(){
-	//dichiaro tutte le varibili di root all'inizio per poter entrare nel loop senza problemi
-	TApplication myApp("myApp", 0, 0);
-	TCanvas canvas3, canvas4, canvas2;
-	TF1* g1;
-	TF1* pp;
-	TF1* total;
-	//BOOOOOOOOH QUi è tutta la roba che ha scritto la meroni e la lascio così per ora
-	gStyle->SetOptStat(111111111);
-	gStyle->SetOptFit(111111);
-
 
 	while(stay_alive){
-
-		//OPZIONE 2: più pesante ma meno buggosa
-		TH1F* gg=new TH1F("gg", " spettro", data.size(), 0.,data.size());
-		//riempio il grafico e stampo tutto (devo farlo una sola volta, non ho bisogno del loop)
-		for (unsigned int i=0; i<data.size(); i++)
-			gg->SetBinContent(i, data[i]);
-
-		if(!configured){
-			std::cout << std::endl << "Nessuna configurazione dei canali per il fit trovata, analizzare il grafico ed inserire i canali scegliendo (1). " <<std::endl;
-			canvas3.Modified();
-			canvas3.Update();
-			canvas4.Modified();
-			canvas4.Update();
-			canvas2.cd();
-			gg->Draw();
-			canvas2.Modified();
-			canvas2.Update();
-
-		}
-		else{
-			g1=new TF1("g1", "gaus", ch1, ch2);
-			pp= new TF1("pp", "pol1", ch1, ch2);
-			total= new TF1("total","gaus(0)+pol1(3)",ch1,ch2);
-			// fit gaus+polinomio
-			Double_t par[12],errpar[12];  //TODO 12?? da capire meglio
-			for(int i=0; i<12; ++i){
-				par[i]=0;
-				errpar[i]=0;
+		//l'insieme di if che segue è un po' incasinato, si può fare di meglio?
+		if(!configured){ //fit non configurato
+			if(background_removed){ //c'è il fondo da rimuovere
+				if(type=="single")
+					root.run_no_config(data_cleaned);
+				if(type=="split")
+					root.run_split_no_config(data_cleaned, data);
+				if(type=="same")
+					root.run_same_no_config(data_cleaned, data);
 			}
-
-			// fit con solo gauss per ottenere parametri iniziali
-			gg->Fit(g1,"R"); //TODO sarebbe bello poter stampare su file i risultati del fit, ma come diavolo funziona root?
-			g1->GetParameters(&par[0]);
-
-			short width=20; //larghezza stampa
-
-			std::cout << std::endl << "### Fit results - Gauss only ###"
-				<< std::endl;
-			std::cout << std::left << "#" << std::setw(width) << "Max" <<
-				std::setw(width) << "Mean" << std::setw(width) << "StDev"
-				<< std::endl;
-			std::cout << std::left << " " << std::setw(width) << par[0] <<
-				std::setw(width) << par[1] << std::setw(width) << par[2] <<
-				std::endl << std::endl;
-			total->SetParameters(par);
-			total->SetLineColor(6);
-		  	gg->Fit(total,"R+","",ch1,ch2);
-
-			total->GetParameters(&par[0]);
-			errpar[0]=total->GetParError(0);
-			errpar[1]=total->GetParError(1);
-			errpar[2]=total->GetParError(2);
-
-			std::cout<<std::endl << "### Fit results - Gauss + Polinomial(1) ###"
-				<< std::endl << std::endl;
-			std::cout << std::left << "#" << std::setw(width) << "Chi Squared "
-				<< std::setw(width) << "N Deg. Freedom" << std::setw(width)
-				<< "Probability" << std::endl;
-			std::cout << std::left << " " << std::setw(width) <<
-				total->GetChisquare() << std::setw(width) << total->GetNDF()
-				<< std::setw(width) << total->GetProb() << std::endl
-				<< std::endl;
-			std::cout<< std::left <<std::setw(15)<< "## Gauss parameters ##"
-				<< std::endl;
-			std::cout<<std::left<< "#" << std::setw(width) << "Max" <<
-				std::setw(width) << "Mean" << std::setw(width) << "StDev"
-				<< std::endl;
-			std::cout<<" " << std::left<< std::setw(width) << par[0] <<
-				std::setw(width) << par[1] << std::setw(width) << par[2] <<
-				std::endl<<std::endl;
-			std::cout << "#" << std::left<< std::setw(width) << "Error_Max"
-				<<std::setw(width) << "Error_Mean" << std::setw(width) <<
-				"Error_StDev" << std::endl;
-			std::cout << " " << std::left << std::setw(width) << errpar[0] <<
-				std::setw(width) << errpar[1] << std::setw(width) << errpar[2]
-				<< std::endl << std::endl;
-			std::cout << std::left << "#" << std::setw(width) << "StDev/Mean"
-				<< std::setw(width) << "Gaussian Area" << std::setw(width) <<
-				"Error_Area"<< std::endl;
-			double area_gauss=par[0]*par[2]*2.507;
-			double arg=pow((par[2]*errpar[0]),2.)+pow((par[0]*errpar[2]),2.);
-			double err_area_gauss=2.507*pow(arg,0.5);
-			std::cout << std::left << " " << std::setw(width) << par[2]/par[1]
-				<< std::setw(width) << area_gauss << std::setw(width) <<
-				err_area_gauss << std::endl << std::endl;
-			std::cout << std::left << "#" << std::setw(width) << "Live Time" <<
-				std::setw(width) << "Real Time" << std::endl;
-			std::cout<< std::left  << " "  << time_live << "\t\t     " <<
-				time_real << std::endl << std::endl;
-
-			// per disegnare le curve parziali
-			g1->SetParameters(&par[0]);
-			g1->SetLineColor(3);
-			canvas3.cd();
-			g1->Draw();
-			canvas3.Modified();
-			canvas3.Update();
-
-			pp->SetParameters(&par[3]);
-			pp->SetLineColor(5);
-			canvas4.cd();
-			pp->Draw();
-			canvas4.Modified();
-			canvas4.Update();
-			canvas2.cd();
-			gg->Draw();
-			canvas2.Modified();
-			canvas2.Update();
+			else
+				root.run_no_config(data);
 		}
+		else{ //fit configurato
+			bin_config bin={ch1, ch2};
+			if(background_removed){
+				if(type=="single")
+					root.run_one_config(data_cleaned, bin, data_times);
+				if(type=="split")
+					root.run_split_config(data_cleaned, data, bin, data_times);
+				if(type=="same")
+					root.run_same_config(data_cleaned, data, bin, data_times);
+			}
+			else
+				root.run_one_config(data, bin ,data_times);
+		}
+
 
 		bool previously_configured=configured; //nel ciclo while (questo thread sta "aspettando") l'utente potrebbe cambiare le configurazioni con l'altro thread: se configured diventa true entro nell'if, ma non dovrei!, quindi mi salvo lo stato di configured prima che l'utente possa cambiarlo.
 		//un po' di roba di comunicazione tra thread
+
+	//lo ammmetto ho scritto quello che segue sotto effetto di droghe pesanti (redbull+caffé), non ho idea di cosa io abbia scritto ma funziona...
 		while(stay_alive and !refresh){
 			//se sono arrivato qua dovrei avere tutte le canvas e la roba di root che è partita, è arrivato il momento di chiedere all'utente cosa vuole fare della sua vita
 			std::unique_lock<std::mutex> lk(mut_ask);
@@ -267,16 +178,14 @@ void application::ROOT_stuff(){
 
 		}
 
-		if(previously_configured){ //per poterli ricreare al ciclo successivo
-			delete g1;
-			delete pp;
-			delete total;
-		}
+		if(previously_configured) //per poterli ricreare al ciclo successivo
+			root.delete_one_config();
+		else
+			root.delete_no_config();
 
 		mut_refresh.lock();
 		refresh=false; //devo riportarlo indietro, se no si rischia di entrare in un loop infinito
 		mut_refresh.unlock();
-		delete gg; //OPZIONE 2
 	}
 }
 
@@ -309,7 +218,7 @@ void application::run(){
 		while(!fine){
 			// DIVIDO il caso in cui ci sono configurazioni precedenti e il caso in cui non ci sono
 			if(config_empty){
-				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire "
+				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire il fit "
 					  <<  "\n\t(2) per terminare il programma" ;
 				if(pause_root)
 					std::cout << "\n\t(r) per far ripartire ROOT (per grafici interattivi)." << std::endl;
@@ -317,7 +226,7 @@ void application::run(){
 					std::cout << "\n\t(p) per mettere in pausa ROOT (per power saving). " <<std::endl;
 			}
 			else{
-				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire "
+				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire il fit"
 			 		  << "un fit;\n\t(2) per scegliere una configurazione precedentemente"
 					  <<  " usata;\n\t(3) per terminare il programma";
 				if(pause_root)
@@ -401,4 +310,4 @@ void application::run(){
 			ask=false;
 		std::cout << std::endl << std::endl; //lascio un po' di spazio
 	}
-}*/
+}

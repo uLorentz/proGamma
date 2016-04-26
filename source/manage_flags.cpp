@@ -13,9 +13,10 @@
 #include "functions.h"
 
 manage_flags::manage_flags(unsigned int argc, char** argv) :
-	config(false),
+	backgroundfile(""),	
+	type("single"),
 	minargs(2),
-	maxargs(3) //da settarsi a seconda delle possibili flag
+	maxargs(4) //da settarsi a seconda delle possibili flag
 {
 	for(int i=0; i<argc; ++i)
 		arg.push_back(argv[i]);
@@ -25,32 +26,74 @@ manage_flags::manage_flags(unsigned int argc, char** argv) :
 
 void manage_flags::setflags(){
 
-	if(arg.size()<minargs or arg.size() >maxargs)
+	if(arg.size()<minargs or arg.size() >maxargs){
+		std::cout << "\nArgomenti non validi!" << std::endl;
 		error();
-
+	}
+	
 	//ho trovato le varie opzioni /file?
-	std::size_t find_file=0, find_config=0;
+	std::size_t find_file=std::string::npos, find_back=std::string::npos, find_type=std::string::npos;
 	//Analizzo tutti gli argomenti
 	for(int i=1; i<arg.size(); ++i){
 		//l'utente ha bisogno di aiuto?
 		if(arg[i]=="-h" or arg[i]=="--help")
 			help();
 
-		//CERCO:
-		//1)
+	//CERCO:
+		//1) FILE DI DATI
 		find_file=arg[i].find(".Spe");
-		//2)
-		find_config=arg[i].find("--config");
+		//2) FILE BACKGROUND
+		find_back=arg[i].find("--background");
+		//3) TIPO DI CANVAS
+		find_type=arg[i].find("--type");
+	
 
-		//SETTO:
-		//1)
-		if(find_file!=std::string::npos)
-			filename=arg[i];
-		//2)
-		if(find_config!=std::string::npos)
-			config=true;
 
-		if(find_file==find_config){ //se sono uguali sono ad npos, non ho trovato nulla. Nota per ogni nuova opzione aggiunta va aggiunto l'== di quell'opzione
+
+	//SETTO:
+		//1) FILE DATI
+		if(find_file!=std::string::npos){
+			find_file=arg[i].find("--background");
+			if(find_file==std::string::npos) //potrebbe essere il file del fondo, e io non lo voglio!
+				filename=arg[i];
+		}
+		
+		//2) FILE BACKGROUND
+		if(find_back!=std::string::npos){
+			find_back=arg[i].find("=");
+			//ho dato una config non corretta
+			if(find_back==std::string::npos){
+				std::cout << "\nERROR: " << arg[i] << " is not a valid option" << std::endl;
+				error();
+			}
+			backgroundfile=arg[i].substr(find_back+1);
+			
+			if(backgroundfile.empty()){ //il file del background non è stato fornito
+				std::cout << "\nERROR: " << arg[i] << " is not a valid option" << std::endl;
+				error();
+			}
+
+		}
+
+		//3) CANVAS
+		if(find_type!=std::string::npos){
+			find_type=arg[i].find("=");
+			//ho dato una config non corretta
+			if(find_type==std::string::npos){
+				std::cout << "\nERROR: " << arg[i] << " is not a valid option" << std::endl;
+				error();
+			}
+			type=arg[i].substr(find_type+1);
+			if(type!="split" and type!="single" and type!="same"){
+				std::cout << "\nERROR: " << arg[i] << " is not a valid option" << std::endl;
+				error();
+			}
+		}
+
+
+
+
+		if(find_file==find_back==find_type){ //se sono uguali sono ad npos, non ho trovato nulla. Nota per ogni nuova opzione aggiunta va aggiunto l'== di quell'opzione
 
 		//perché questo non funziona?
 		//if(find_file==find_config==std::string::npos){ //l'opzione non è valida
@@ -79,18 +122,19 @@ void manage_flags::help(){
 	std::cout << "\nDove *.Spe è il file di dati generato da Maestro(c).\n"<< std::endl;
 
 	std::cout << "\nAvailable options: " << std::endl;
-	std::cout << "  --config" << "\tSe presente il programma chiede quale usare tra le configurazioni di canali precedentemente utilizzate"<< std::endl;
+	std::cout << "  --background=" << "\tDeve essere seguito (senza spazi) dal nome del file con i dati del fondo. Se presente rimuove il fondo dai dai."<< std::endl;
+	std::cout << "  --type=" << "\tPuò essere usato solo insieme alla flag ''--background'' (facoltativo, opzione di deafult è 'single', vedi dopo), setta il tipo di output su canvas. Le possibili opzioni sono: ''single'' (visualizza solo i dati puliti), ''same'' (visualizza dati con il fondo e senza fondo sulla stessa canvas), ''split'' (divide le canvas in due e stampa sia sia i dati col fondo che senza)." << std::endl;
 	std::cout << std::endl;
 	exit(2); //interrompo il programma se ho richiesto l'output di aiuto
 }
 
 void manage_flags::run(){
-	if(!config){
-		application app(filename, false, "fondo21aprile.Spe");
+	if(backgroundfile.empty()){
+		application app(filename);
 		app.run();
 	}
 	else{
-		application app(filename, config, "fondo21aprile.Spe");
+		application app(filename, backgroundfile, type);
 		app.run();
-	}
+	}	
 }

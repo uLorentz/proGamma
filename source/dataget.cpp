@@ -12,15 +12,15 @@
 
 #include "functions.h"
 
-dataget::dataget(std::string _filename, std::vector<int>& data, times& t) :
+dataget::dataget(std::string _filename) :
 	filename(_filename),
 	fileconfname("")
 {
-	read_data(data, t.live, t.real); //leggo i dati
 }
 
 
-void dataget::read_data ( std::vector<int>& data, std::string& t_live, std::string& t_real){
+void dataget::read_data ( std::vector<int>& data, times& t){
+
 	std::ifstream in;
 	in.open(filename.c_str()); //Apro canale in ingresso e controllo che tutto vada
 
@@ -42,9 +42,9 @@ void dataget::read_data ( std::vector<int>& data, std::string& t_live, std::stri
 			break;
 	}
 	found2=times.find(" ");
- 
-	t_live = times.substr(0,found2);
-	t_real = times.substr(found2+1);
+	
+	t.live = times.substr(0,found2);
+	t.real = times.substr(found2+1);
 	unsigned int n; //numero di canali
 	in>>n>> n; //leggo due volte: nei file ho sempre uno 0 (che è?) e poi il numero di bin
 

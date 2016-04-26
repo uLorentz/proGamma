@@ -14,7 +14,7 @@
 
 
 int main(int argc, char **argv){
-//	manage_flags(argc, argv);
+	manage_flags(argc, argv);
 
 	return 0;
 }

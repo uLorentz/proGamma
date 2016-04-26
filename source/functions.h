@@ -60,16 +60,15 @@ private:
 	const int minargs, maxargs;
 
 	//variables needed by application constructor
-	std::string filename;
-	bool config;
+	std::string filename, backgroundfile, type;
 };
 
 
 /******** BIN_CONFIG *********/
 //structure containing fit bounds
 struct bin_config{
-	int left;
-	int right;
+	unsigned int left;
+	unsigned int right;
 };
 
 
@@ -86,34 +85,68 @@ struct times{
 class dataget{
 public:
 	//in ingresso il nome del file, il vettore coi dati e la struct coi tempi in cui salvare tutto	
-	dataget(std::string _filename, std::vector<int>& data, times& t);
+	dataget(std::string _filename);
+	
+	//legge i dati
+	void read_data (std::vector<int>& data, times& t);
+
 	//legge le config da file
 	void get_config(std::vector<bin_config>& bins);
 	//scrive il vettore config su file
 	void writeconfig(const std::vector<bin_config> &bins);
 private:
 	std::string filename, fileconfname;
-	
-	//legge i dati
-	void read_data (std::vector<int>& data, std::string& t_live, std::string& t_real);
 };
 
 
 /******** ROOTING *********/
 class rooting{
 public:
-	rooting(std::vector<int>& data, times tdat, bin_config config, std::vector<int> & fondo, times tfon, short canvas_type);
-private:
+	rooting();
+	
+	/************* NO CONFIG ************/
+	void run_no_config(std::vector<int>& data);
+	//MUST be called after "run_no_config()"
+	void delete_no_config();
 
+	//print on same canvas uncleaned data and cleaned data
+	void run_same_no_config(std::vector<int>& cleaned, std::vector<int>& uncleaned);
+	//MUST be called after  "run_same_no_config()"
+	void delete_same_no_config();
+
+	//print on a split canvas uncleaned data and cleaned data
+	void run_split_no_config(std::vector<int>& cleaned, std::vector<int>& uncleaned);
+	//MUST be called after  "run_split_no_config()"
+	void delete_split_no_config();
+
+
+	
+	/************ CONFIGURED ************/
+	//COMMENTARE 	
+	void run_one_config(std::vector<int>& data,bin_config config, times data_times);
+	//MUST be called after "run_one_config()"
+	void delete_one_config();	
+	
+	//Come la precedente ma due sulla stessa canvas
+	void run_same_config(std::vector<int>& cleaned, std::vector<int>& uncleaned,bin_config config, times data_times);
+	//MUST be called after "run_same_config()"
+	void delete_same_config();	
+	
+	//Come la precedente ma splittate sulla stessa canvas
+	void run_split_config(std::vector<int>& cleaned, std::vector<int>& uncleaned,bin_config config, times data_times);
+	//MUST be called after "run_same_config()"
+	void delete_split_config();	
+	
+	
+private:
+	TApplication myApp; // TApplication needed for X11 output
+	TCanvas *canvas_data, *canvas_gauss, *canvas_pol;	
+	TH1F* gg, *gg2;	
+	TF1* g1, *g2;
+	TF1* pp, *pp2;
+	TF1* total, *total2;
 
 };
-
-
-
-
-//TODO TODO TODO TODO //
-// TUtta la parte del configured e empty config!
-
 
 
 /******** APPLICATION *********/
@@ -121,8 +154,9 @@ private:
 class application{
 public:
 	//name of '.Spe' file. 'choose=false' if you want to use the last config,
-	//'choose=true' if you want to choose from all existent configs. //backgroundfile: leave blanc if no background is provided
-	application(std::string filename,  std::string backgroundfile="");
+	//backgroundfile: leave blanc if no background is provided
+	//_type: type of canvas drawing, possibile options are: "single", "split", "same
+	application(std::string filename,  std::string backgroundfile="", std::string _type="single");
 	void run();
 
 private:
@@ -133,7 +167,6 @@ private:
 	void remove_background();
 	//to choose configuration of the peak
 	void choose_config();
-
 	//set config
 	void set_config(unsigned int canale1, unsigned int canale2);
 
@@ -149,13 +182,16 @@ private:
 	/* MEMBERS */
 	dataget signal; // signal 
 
+	rooting root;
 	//string with 'live time' and 'real time' of data collection
 	times data_times, back_times;
 
 
 
 	//data vector and background
-	std::vector<int> data, background;
+	std::vector<int> data, data_cleaned, background;
+	std::string type;
+	bool background_removed; //if true backgroundfile has been provided
 	//'true' if peak bounds are configured, otherwise 'false'
 	bool configured;
 	bool config_empty;
