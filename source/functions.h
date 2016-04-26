@@ -32,11 +32,10 @@
 #include "TGraphErrors.h"
 #include "TF1.h"
 #include "TStyle.h"
-//#include "TObjArray.h"
-//#include "TRandom.h"
 #include "TApplication.h"
 #include "TSystem.h"
 
+/******** MANAGE_FLAGS ********/
 //Works only with "application" class
 class manage_flags{
 public:
@@ -61,39 +60,111 @@ private:
 	const int minargs, maxargs;
 
 	//variables needed by application constructor
-	std::string filename;
-	bool config;
+	std::string filename, backgroundfile, type;
 };
 
+
+/******** BIN_CONFIG *********/
 //structure containing fit bounds
 struct bin_config{
-	int left;
-	int right;
+	unsigned int left;
+	unsigned int right;
 };
 
+
+/******** TIMES *********/
+struct times{
+	std::string live;
+	std::string real;
+};
+
+
+
+/******** DATAGET *********/
+//I commenti ai metodi verranno poi... ora sto cercando di far funzionare tutto...
+class dataget{
+public:
+	//in ingresso il nome del file, il vettore coi dati e la struct coi tempi in cui salvare tutto	
+	dataget(std::string _filename);
+	
+	//legge i dati
+	void read_data (std::vector<int>& data, times& t);
+
+	//legge le config da file
+	void get_config(std::vector<bin_config>& bins);
+	//scrive il vettore config su file
+	void writeconfig(const std::vector<bin_config> &bins);
+private:
+	std::string filename, fileconfname;
+};
+
+
+/******** ROOTING *********/
+class rooting{
+public:
+	rooting();
+	
+	/************* NO CONFIG ************/
+	void run_no_config(std::vector<int>& data);
+	//MUST be called after "run_no_config()"
+	void delete_no_config();
+
+	//print on same canvas uncleaned data and cleaned data
+	void run_same_no_config(std::vector<int>& cleaned, std::vector<int>& uncleaned);
+	//MUST be called after  "run_same_no_config()"
+	void delete_same_no_config();
+
+	//print on a split canvas uncleaned data and cleaned data
+	void run_split_no_config(std::vector<int>& cleaned, std::vector<int>& uncleaned);
+	//MUST be called after  "run_split_no_config()"
+	void delete_split_no_config();
+
+
+	
+	/************ CONFIGURED ************/
+	//COMMENTARE 	
+	void run_one_config(std::vector<int>& data,bin_config config, times data_times);
+	//MUST be called after "run_one_config()"
+	void delete_one_config();	
+	
+	//Come la precedente ma due sulla stessa canvas
+	void run_same_config(std::vector<int>& cleaned, std::vector<int>& uncleaned,bin_config config, times data_times);
+	//MUST be called after "run_same_config()"
+	void delete_same_config();	
+	
+	//Come la precedente ma splittate sulla stessa canvas
+	void run_split_config(std::vector<int>& cleaned, std::vector<int>& uncleaned,bin_config config, times data_times);
+	//MUST be called after "run_same_config()"
+	void delete_split_config();	
+	
+	
+private:
+	TApplication myApp; // TApplication needed for X11 output
+	TCanvas *canvas_data, *canvas_gauss, *canvas_pol;	
+	TH1F* gg, *gg2;	
+	TF1* g1, *g2;
+	TF1* pp, *pp2;
+	TF1* total, *total2;
+
+};
+
+
+/******** APPLICATION *********/
 //the "proGamma" itself
 class application{
 public:
 	//name of '.Spe' file. 'choose=false' if you want to use the last config,
-	//'choose=true' if you want to choose from all existent configs. 
 	//backgroundfile: leave blanc if no background is provided
-	application(std::string _filename, bool _choose=false, std::string _backgroundfile="");
+	//_type: type of canvas drawing, possibile options are: "single", "split", "same
+	application(std::string filename,  std::string backgroundfile="", std::string _type="single");
 	void run();
 
 private:
 	/* METHODS */
-	//read 'file' file and put data in d vector 
-	//to be used for main data and background data //real and live time
-	void read_data (const std::string& file, std::vector<int>& d, 
-					std::string& t_live, std::string& t_real);
-
 	//if a background file is provided it removes the background from the data
 	void remove_background();
-	//create config file if non existent, read config file if existent
-	void get_config();
 	//to choose configuration of the peak
 	void choose_config();
-
 	//set config
 	void set_config(unsigned int canale1, unsigned int canale2);
 
@@ -104,16 +175,21 @@ private:
 	void wakeup_root();
 
 	/* MEMBERS */
-	//filename=file.Spe (data), fileconfname=file.config (peak configs), file of backgraound data
-	std::string filename,fileconfname, backgroundfile;
+	dataget signal; // signal 
+
+	rooting root;
 	//string with 'live time' and 'real time' of data collection
-	std::string time_real, time_live;
-	//data vector
-	std::vector<int> data;
-	//'true' if config file empty, otherwise 'false' 
-	bool config_empty;
+	times data_times, back_times;
+
+
+
+	//data vector and background
+	std::vector<int> data, data_cleaned, background;
+	std::string type;
+	bool background_removed; //if true backgroundfile has been provided
 	//'true' if peak bounds are configured, otherwise 'false'
 	bool configured;
+	bool config_empty;
 	//'true' if user want to chose a particular config, otherwise 'false'
 	bool choose;
 	//peak fit bounds

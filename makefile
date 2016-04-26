@@ -8,8 +8,8 @@ else
 endif
 
 CXXFLAGS := $(CXXFLAGS) -std=c++11 -pthread  #-O3
+obj=progamma.o dataget.o application.o rooting.o manage_flags.o
 
-obj=progamma.o application.o manage_flags.o
 VPATH=./source/
 OBJPATH=./obj/
 
