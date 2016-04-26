@@ -13,7 +13,7 @@
 #include "functions.h"
 
 manage_flags::manage_flags(unsigned int argc, char** argv) :
-	backgroundfile(""),	
+	backgroundfile(""),
 	type("single"),
 	minargs(2),
 	maxargs(4) //da settarsi a seconda delle possibili flag
@@ -30,7 +30,7 @@ void manage_flags::setflags(){
 		std::cout << "\nArgomenti non validi!" << std::endl;
 		error();
 	}
-	
+
 	//ho trovato le varie opzioni /file?
 	std::size_t find_file=std::string::npos, find_back=std::string::npos, find_type=std::string::npos;
 	//Analizzo tutti gli argomenti
@@ -46,7 +46,7 @@ void manage_flags::setflags(){
 		find_back=arg[i].find("--background");
 		//3) TIPO DI CANVAS
 		find_type=arg[i].find("--type");
-	
+
 
 
 
@@ -57,7 +57,7 @@ void manage_flags::setflags(){
 			if(find_file==std::string::npos) //potrebbe essere il file del fondo, e io non lo voglio!
 				filename=arg[i];
 		}
-		
+
 		//2) FILE BACKGROUND
 		if(find_back!=std::string::npos){
 			find_back=arg[i].find("=");
@@ -67,7 +67,7 @@ void manage_flags::setflags(){
 				error();
 			}
 			backgroundfile=arg[i].substr(find_back+1);
-			
+
 			if(backgroundfile.empty()){ //il file del background non è stato fornito
 				std::cout << "\nERROR: " << arg[i] << " is not a valid option" << std::endl;
 				error();
@@ -136,5 +136,5 @@ void manage_flags::run(){
 	else{
 		application app(filename, backgroundfile, type);
 		app.run();
-	}	
+	}
 }

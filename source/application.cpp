@@ -13,7 +13,7 @@
 #include "functions.h"
 
 application::application(std::string filename,  std::string backgroundfile, std::string _type ) :
-	
+
 	signal(filename),
 
 	type(_type),
@@ -22,29 +22,27 @@ application::application(std::string filename,  std::string backgroundfile, std:
 	stay_alive(true),
 	refresh(false),
 	ask(false),
-	config_empty(false),
+	config_empty(true), //can't know if config are not empty till you prove it
 	pause_root(false),
 	background_removed(false)
 {
 	signal.read_data(data, data_times);
 	signal.get_config(bins);
-	if(bins.empty() or (bins.size()==1 and bins[0].left==0 and bins[0].right==0)){
-		if(bins.empty()) //TODO non ricordo: a cosa diavolo serviva config empty? o comunque cosa diavolo cambia da configured?
-			config_empty=true;
+	if(bins.empty()){
+		config_empty=true;
 		configured=false;
-		ch1=0; //in realtà è ridondante 
-		ch2=0; //idem
 	}
 	else{ //uso l'ultima configurazione usata
+		config_empty=false;
 		configured=true;
 		ch1=bins.back().left;
 		ch2=bins.back().right;
 	}
-	
+
 	if(backgroundfile!=""){ //allora ho dati del fondo da caricare
 		dataget back(backgroundfile); //la classe back può morire anche qui, non mi serve più poi (non ha file di configurazione)
 		back.read_data(background, back_times);
-		remove_background();	
+		remove_background();
 	}
 }
 
@@ -81,46 +79,48 @@ void application::choose_config(){ //abbastanza autoesplicativo
 
 void application::set_config(unsigned int canale1, unsigned int canale2){
 	if(canale1>=canale2){ //non ha senso
-		std::cout << "You have inserted a non valid channel configuration. Unconfiguring..." << std::endl;
-		canale1=0;
-		canale2=0;
+		std::cout << "E' stata inserita una configurazione non valida, verra' "
+			"nuovamente proposta la scelta."<< std::endl;
+		configured=false;
 	}
-	bool add=true; //potrei usare un goto.... ma evitiamo vah!
-	for(unsigned int i=0;i<bins.size();++i){ //ricerco se ho già usato queste configurazioni in precedenza
-		if(bins[i].left==canale1 && bins[i].right==canale2){
-			bin_config temp=bins[i];
-			bins[i]=bins.back();
-			bins[bins.size()-1]=temp;
-			add=false; //mi salto il prossimo if dopo il for
-			break;
+	else {
+		bool add=true; //potrei usare un goto.... ma evitiamo vah!
+		for(unsigned int i=0;i<bins.size();++i){ //ricerco se ho già usato queste configurazioni in precedenza
+			if(bins[i].left==canale1 && bins[i].right==canale2){
+				bin_config temp=bins[i];
+				bins[i]=bins.back();
+				bins[bins.size()-1]=temp;
+				add=false; //mi salto il prossimo if dopo il for
+				break;
+			}
 		}
-	}
-	if(add){ //configurazione mai usata in precedenza
-		bin_config temp;
-		temp.left=canale1;
-		temp.right=canale2;
-		bins.push_back(temp);
-	}
+		if(add){ //configurazione mai usata in precedenza
+			bin_config temp;
+			temp.left=canale1;
+			temp.right=canale2;
+			bins.push_back(temp);
+		}
 
-	ch1=canale1;
-	ch2=canale2;
+		ch1=canale1;
+		ch2=canale2;
 
-	signal.writeconfig(bins);
-	config_empty=false; //TEMP
-	configured=true;
+		signal.writeconfig(bins);
+		config_empty=false;
+		configured=true;
+	}
 }
 
 void application::remove_background(){
 	double back_time=std::stoi(back_times.live);
 	double data_time=std::stoi(data_times.live);
 	//normalizzo ai tempi di data
-        for(int i=0; i<background.size(); ++i)
+	for(int i=0; i<background.size(); ++i)
 		background[i]=(int)(((double)background[i]/(double)back_time)*data_time);
 	data_cleaned.resize(data.size());
- 	for(int i=0;i<data.size(); ++i){
-                 data_cleaned[i]=data[i]-background[i];
-                 if(data_cleaned[i] < 0)
-                         data_cleaned[i]=0;
+	for(int i=0;i<data.size(); ++i){
+		data_cleaned[i]=data[i]-background[i];
+		if(data_cleaned[i] < 0)
+			data_cleaned[i]=0;
 	}
 	background_removed=true;
 }
@@ -159,7 +159,7 @@ void application::ROOT_stuff(){
 		bool previously_configured=configured; //nel ciclo while (questo thread sta "aspettando") l'utente potrebbe cambiare le configurazioni con l'altro thread: se configured diventa true entro nell'if, ma non dovrei!, quindi mi salvo lo stato di configured prima che l'utente possa cambiarlo.
 		//un po' di roba di comunicazione tra thread
 
-	//lo ammmetto ho scritto quello che segue sotto effetto di droghe pesanti (redbull+caffé), non ho idea di cosa io abbia scritto ma funziona...
+		//lo ammmetto ho scritto quello che segue sotto effetto di droghe pesanti (redbull+caffé), non ho idea di cosa io abbia scritto ma funziona...
 		while(stay_alive and !refresh){
 			//se sono arrivato qua dovrei avere tutte le canvas e la roba di root che è partita, è arrivato il momento di chiedere all'utente cosa vuole fare della sua vita
 			std::unique_lock<std::mutex> lk(mut_ask);
@@ -215,7 +215,7 @@ void application::run(){
 			// DIVIDO il caso in cui ci sono configurazioni precedenti e il caso in cui non ci sono
 			if(config_empty){
 				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire il fit "
-					  <<  "\n\t(2) per terminare il programma" ;
+					<<  "\n\t(2) per terminare il programma" ;
 				if(pause_root)
 					std::cout << "\n\t(r) per far ripartire ROOT (per grafici "
 						"interattivi)." << std::endl;
@@ -225,8 +225,8 @@ void application::run(){
 			}
 			else{
 				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire il fit"
-			 		  << "un fit;\n\t(2) per scegliere una configurazione precedentemente"
-					  <<  " usata;\n\t(3) per terminare il programma";
+					<< "un fit;\n\t(2) per scegliere una configurazione precedentemente"
+					<<  " usata;\n\t(3) per terminare il programma";
 				if(pause_root)
 					std::cout << "\n\t(r) per far ripartire ROOT (per grafici "
 						"interattivi)." << std::endl;

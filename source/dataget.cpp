@@ -42,7 +42,7 @@ void dataget::read_data ( std::vector<int>& data, times& t){
 			break;
 	}
 	found2=times.find(" ");
-	
+
 	t.live = times.substr(0,found2);
 	t.real = times.substr(found2+1);
 	unsigned int n; //numero di canali
@@ -62,7 +62,6 @@ void dataget::get_config(std::vector<bin_config>& bins) {
 	fileconfname=filename;
 	fileconfname.erase(pos, filename.length());
 	fileconfname="./configure_files/"+fileconfname+".config"; //nella cartella configure_files
-	//'true' if config file empty, otherwise 'false' //TEMP
 
 	//apro un canale in ingresso "filename.config"
 	std::fstream fileconfig;
@@ -75,14 +74,13 @@ void dataget::get_config(std::vector<bin_config>& bins) {
 			std::cerr <<"File out ''" << fileconfname <<"'' error."<< std::endl;
 			exit(3);
 		}
-		//riempio con due zeri il file ma la flag "configured" rimane su false, non ho i canali del picco
 		fileconfig.close();
 	}
-	// provo ad aggiungere un else if, nel caso in cui sia vuoto il file di conf //TEMP
+	// nel caso in cui sia vuoto il file di conf
 	else if (fileconfig.peek() == std::ifstream::traits_type::eof()) {
 		fileconfig.close();
 	}
-	else{ //il file esiste, leggo i valori
+	else { //il file esiste, leggo i valori
 		bin_config temp; //variabile temporanea in cui leggere
 		for(;;){ //leggo tutte le configurazioni
 			fileconfig>>temp.left >>temp.right;
