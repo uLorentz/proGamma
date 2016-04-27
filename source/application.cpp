@@ -177,10 +177,32 @@ void application::ROOT_stuff(){
 			lk2.unlock();
 		}
 
-		if(previously_configured) //per poterli ricreare al ciclo successivo
-			root.delete_one_config();
-		else
-			root.delete_no_config();
+		if(previously_configured){ //per poterli ricreare al ciclo successivo
+			if(background_removed){ //c'è il fondo da rimuovere
+				if(type=="single")
+					root.delete_no_config();
+				if(type=="split")
+					root.delete_split_no_config();
+				if(type=="same")
+					root.delete_same_no_config();
+			}
+			else
+				root.delete_no_config();
+		
+		}
+		else{
+			if(background_removed){
+				if(type=="single")
+					root.delete_one_config();
+				if(type=="split")
+					root.delete_split_config();
+				if(type=="same")
+					root.delete_same_config();
+			}
+			else
+				root.delete_one_config();
+
+		}
 
 		mut_refresh.lock();
 		refresh=false; //devo riportarlo indietro, se no si rischia di entrare in un loop infinito
