@@ -84,9 +84,9 @@ struct times{
 //I commenti ai metodi verranno poi... ora sto cercando di far funzionare tutto...
 class dataget{
 public:
-	//in ingresso il nome del file, il vettore coi dati e la struct coi tempi in cui salvare tutto	
+	//in ingresso il nome del file, il vettore coi dati e la struct coi tempi in cui salvare tutto
 	dataget(std::string _filename);
-	
+
 	//legge i dati
 	void read_data (std::vector<int>& data, times& t);
 
@@ -103,7 +103,7 @@ private:
 class rooting{
 public:
 	rooting();
-	
+
 	/************* NO CONFIG ************/
 	void run_no_config(std::vector<int>& data);
 	//MUST be called after "run_no_config()"
@@ -120,28 +120,28 @@ public:
 	void delete_split_no_config();
 
 
-	
+
 	/************ CONFIGURED ************/
-	//COMMENTARE 	
+	//COMMENTARE
 	void run_one_config(std::vector<int>& data,bin_config config, times data_times);
 	//MUST be called after "run_one_config()"
-	void delete_one_config();	
-	
+	void delete_one_config();
+
 	//Come la precedente ma due sulla stessa canvas
 	void run_same_config(std::vector<int>& cleaned, std::vector<int>& uncleaned,bin_config config, times data_times);
 	//MUST be called after "run_same_config()"
-	void delete_same_config();	
-	
+	void delete_same_config();
+
 	//Come la precedente ma splittate sulla stessa canvas
 	void run_split_config(std::vector<int>& cleaned, std::vector<int>& uncleaned,bin_config config, times data_times);
 	//MUST be called after "run_same_config()"
-	void delete_split_config();	
-	
-	
+	void delete_split_config();
+
+
 private:
 	TApplication myApp; // TApplication needed for X11 output
-	TCanvas *canvas_data, *canvas_gauss, *canvas_pol;	
-	TH1F* gg, *gg2;	
+	TCanvas *canvas_data, *canvas_gauss, *canvas_pol;
+	TH1F* gg, *gg2;
 	TF1* g1, *g2;
 	TF1* pp, *pp2;
 	TF1* total, *total2;
@@ -161,9 +161,7 @@ public:
 
 private:
 	/* METHODS */
-
-
-	//if a background file is provided it removes the background data from the main data
+	//if a background file is provided it removes the background from the data
 	void remove_background();
 	//to choose configuration of the peak
 	void choose_config();
@@ -176,11 +174,8 @@ private:
 	//self explaining
 	void wakeup_root();
 
-
-
-
 	/* MEMBERS */
-	dataget signal; // signal 
+	dataget signal; // signal
 
 	rooting root;
 	//string with 'live time' and 'real time' of data collection
@@ -191,9 +186,11 @@ private:
 	//data vector and background
 	std::vector<int> data, data_cleaned, background;
 	std::string type;
-	bool background_removed; //if true backgroundfile has been provided
+	//if 'true' background file has been provided
+	bool background_removed;
 	//'true' if peak bounds are configured, otherwise 'false'
 	bool configured;
+	//'true' if the config file is empty, 'false' otherwise
 	bool config_empty;
 	//'true' if user want to chose a particular config, otherwise 'false'
 	bool choose;
