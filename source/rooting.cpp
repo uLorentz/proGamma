@@ -21,7 +21,6 @@ rooting::rooting() :
 }
 
 void rooting::run_no_config(std::vector<int>& data){
-	canvas_data=new TCanvas();
 
 	gg=new TH1F("gg", " spettro", data.size(), 0.,data.size());
 	//riempio il grafico e stampo tutto (devo farlo una sola volta, non ho bisogno del loop)
@@ -29,6 +28,7 @@ void rooting::run_no_config(std::vector<int>& data){
 		gg->SetBinContent(i, data[i]);
 
 	std::cout << std::endl << "Nessuna configurazione dei canali per il fit trovata, analizzare il grafico ed inserire i canali scegliendo (1). " <<std::endl;
+	canvas_data=new TCanvas();
 	canvas_data->cd();
 	gg->Draw();
 	canvas_data->Modified();
@@ -41,7 +41,6 @@ void rooting::delete_no_config(){
 }
 
 void rooting::run_same_no_config(std::vector<int>& cleaned, std::vector<int>& uncleaned){
-	canvas_data=new TCanvas();
 
 	gg=new TH1F("gg", " spettro senza fondo", cleaned.size(), 0.,cleaned.size());
 	gg2=new TH1F("gg2", " spettro con fondo", uncleaned.size(), 0.,uncleaned.size());
@@ -53,6 +52,7 @@ void rooting::run_same_no_config(std::vector<int>& cleaned, std::vector<int>& un
 
 	}
 	std::cout << std::endl << "Nessuna configurazione dei canali per il fit trovata, analizzare il grafico ed inserire i canali scegliendo (1). " <<std::endl;
+	canvas_data=new TCanvas();
 	canvas_data->cd();
 	gg->Draw();
 	gg2->Draw("same"); //corretto?
@@ -67,7 +67,6 @@ void rooting::delete_same_no_config(){
 }
 
 void rooting::run_split_no_config(std::vector<int>& cleaned, std::vector<int>& uncleaned){
-	canvas_data=new TCanvas();
 
 	gg=new TH1F("gg", " spettro senza fondo", cleaned.size(), 0.,cleaned.size());
 	gg2=new TH1F("gg2", " spettro con fondo", uncleaned.size(), 0.,uncleaned.size());
@@ -79,6 +78,8 @@ void rooting::run_split_no_config(std::vector<int>& cleaned, std::vector<int>& u
 
 	}
 	std::cout << std::endl << "Nessuna configurazione dei canali per il fit trovata, analizzare il grafico ed inserire i canali scegliendo (1). " <<std::endl;
+	
+	canvas_data=new TCanvas();
 	canvas_data->Divide(1,2);
 	canvas_data->cd(1);
 	gg->Draw();
@@ -99,11 +100,13 @@ void rooting::delete_split_no_config(){
 void rooting::run_one_config(std::vector<int>& data,bin_config config, times data_times){
 	unsigned int ch1=config.left;
 	unsigned int ch2=config.right;
+	// canvas
+	canvas_gauss=new TCanvas("gauss", "gauss");
+	canvas_pol=new TCanvas("pol", "pol");
+	canvas_data=new TCanvas("spettro", "spettro");
 
 
-	canvas_gauss=new TCanvas();
-	canvas_pol=new TCanvas();
-	canvas_data=new TCanvas();
+
 	gg=new TH1F("gg", " spettro", data.size(), 0.,data.size());
 	//riempio il grafico e stampo tutto (devo farlo una sola volta, non ho bisogno del loop)
 	for (unsigned int i=0; i<data.size(); i++)
@@ -184,6 +187,8 @@ void rooting::run_one_config(std::vector<int>& data,bin_config config, times dat
 	// per disegnare le curve parziali
 	g1->SetParameters(&par[0]);
 	g1->SetLineColor(3);
+
+
 	canvas_gauss->cd();
 	g1->Draw();
 	canvas_gauss->Modified();
@@ -214,11 +219,13 @@ void rooting::delete_one_config(){
 void rooting::run_same_config(std::vector<int>& cleaned, std::vector<int>& uncleaned,bin_config config, times data_times){
 	unsigned int ch1=config.left;
 	unsigned int ch2=config.right;
+	//canvas
+	canvas_gauss=new TCanvas("gauss", "gauss");
+	canvas_pol=new TCanvas("pol", "pol");
+	canvas_data=new TCanvas("spettro", "spettro");
 
 
-	canvas_gauss=new TCanvas();
-	canvas_pol=new TCanvas();
-	canvas_data=new TCanvas();
+
 	gg=new TH1F("gg", " spettro senza fondo", cleaned.size(), 0.,cleaned.size());
 	gg2=new TH1F("gg2", " spettro con fondo", uncleaned.size(), 0.,uncleaned.size());
 	//riempio il grafico e stampo tutto (devo farlo una sola volta, non ho bisogno del loop)
@@ -368,9 +375,6 @@ void rooting::run_split_config(std::vector<int>& cleaned, std::vector<int>& uncl
 	unsigned int ch2=config.right;
 
 
-	canvas_gauss=new TCanvas();
-	canvas_pol=new TCanvas();
-	canvas_data=new TCanvas();
 	gg=new TH1F("gg", " spettro senza fondo", cleaned.size(), 0.,cleaned.size());
 	gg2=new TH1F("gg2", " spettro con fondo", uncleaned.size(), 0.,uncleaned.size());
 	//riempio il grafico e stampo tutto (devo farlo una sola volta, non ho bisogno del loop)
@@ -477,6 +481,12 @@ void rooting::run_split_config(std::vector<int>& cleaned, std::vector<int>& uncl
 	g1->SetLineColor(3);
 	g2->SetParameters(&par2[0]);
 	g2->SetLineColor(3);
+	
+	//canvas
+	canvas_gauss=new TCanvas("gauss", "gauss");
+	canvas_pol=new TCanvas("pol", "pol");
+	canvas_data=new TCanvas("spettro", "spettro");
+//stampo gauss
 	canvas_gauss->Divide(1,2);
 	canvas_gauss->cd(1);
 	g1->Draw();
@@ -489,6 +499,7 @@ void rooting::run_split_config(std::vector<int>& cleaned, std::vector<int>& uncl
 	pp->SetLineColor(5);
 	pp2->SetParameters(&par2[3]);
 	pp2->SetLineColor(5);
+//stampo il polinoio
 	canvas_pol->Divide(1,2);
 	canvas_pol->cd(1);
 	pp->Draw();
@@ -496,9 +507,12 @@ void rooting::run_split_config(std::vector<int>& cleaned, std::vector<int>& uncl
 	pp2->Draw();
 	canvas_pol->Modified();
 	canvas_pol->Update();
+//stampo i dati
 	canvas_data->Divide(1,2);
 	canvas_data->cd(1);
 	gg->Draw();
+	canvas_data->Modified();
+	canvas_data->Update();
 	canvas_data->cd(2);
 	gg2->Draw();
 	canvas_data->Modified();

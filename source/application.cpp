@@ -177,7 +177,7 @@ void application::ROOT_stuff(){
 			lk2.unlock();
 		}
 
-		if(previously_configured){ //per poterli ricreare al ciclo successivo
+		if(!previously_configured){ //per poterli ricreare al ciclo successivo
 			if(background_removed){ //c'è il fondo da rimuovere
 				if(type=="single")
 					root.delete_no_config();
@@ -247,7 +247,7 @@ void application::run(){
 			}
 			else{
 				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire il fit"
-					<< "un fit;\n\t(2) per scegliere una configurazione precedentemente"
+					<< "\n\t(2) per scegliere una configurazione precedentemente"
 					<<  " usata;\n\t(3) per terminare il programma";
 				if(pause_root)
 					std::cout << "\n\t(r) per far ripartire ROOT (per grafici "
