@@ -78,7 +78,7 @@ void rooting::run_split_no_config(std::vector<int>& cleaned, std::vector<int>& u
 
 	}
 	std::cout << std::endl << "Nessuna configurazione dei canali per il fit trovata, analizzare il grafico ed inserire i canali scegliendo (1). " <<std::endl;
-	
+
 	canvas_data=new TCanvas();
 	canvas_data->Divide(1,2);
 	canvas_data->cd(1);
@@ -481,12 +481,12 @@ void rooting::run_split_config(std::vector<int>& cleaned, std::vector<int>& uncl
 	g1->SetLineColor(3);
 	g2->SetParameters(&par2[0]);
 	g2->SetLineColor(3);
-	
+
 	//canvas
 	canvas_gauss=new TCanvas("gauss", "gauss");
 	canvas_pol=new TCanvas("pol", "pol");
 	canvas_data=new TCanvas("spettro", "spettro");
-//stampo gauss
+	//stampo gauss
 	canvas_gauss->Divide(1,2);
 	canvas_gauss->cd(1);
 	g1->Draw();
@@ -499,7 +499,7 @@ void rooting::run_split_config(std::vector<int>& cleaned, std::vector<int>& uncl
 	pp->SetLineColor(5);
 	pp2->SetParameters(&par2[3]);
 	pp2->SetLineColor(5);
-//stampo il polinoio
+	//stampo il polinoio
 	canvas_pol->Divide(1,2);
 	canvas_pol->cd(1);
 	pp->Draw();
@@ -507,7 +507,7 @@ void rooting::run_split_config(std::vector<int>& cleaned, std::vector<int>& uncl
 	pp2->Draw();
 	canvas_pol->Modified();
 	canvas_pol->Update();
-//stampo i dati
+	//stampo i dati
 	canvas_data->Divide(1,2);
 	canvas_data->cd(1);
 	gg->Draw();
