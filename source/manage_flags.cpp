@@ -95,41 +95,41 @@ void manage_flags::setflags(){
 			std::cout << "\nERROR: "  << arg[i] <<" is non a valid option" << std::endl;
 			error();
 		}
-		}
-
-		//non ho trovato il file di dati
-		if(filename.empty()){
-			std::cout << "\n\tERROR: Missing data file! " <<std::endl;
-			error();
-		}
 	}
 
-	void manage_flags::error(){
-		std::cout << "\n\tBasic usage: " << arg[0] << " <file_di_dati> \n" << std::endl;
-		std::cout << "\tFor help type: " << arg[0] << " --help or -h\n" << std::endl;
-		exit(1);
+	//non ho trovato il file di dati
+	if(filename.empty()){
+		std::cout << "\n\tERROR: Missing data file! " <<std::endl;
+		error();
 	}
+}
 
-	void manage_flags::help(){
-		std::cout << "\nQuesto è un programma per eseguire analisi dati su file *.Spe generati da Maestro(c).\n\n";
-		std::cout << "Utilizzo:" << std::endl;
-		std::cout << "1) \t" << arg[0] << " [opzioni] *.Spe\n2)\t" << arg[0] << " *.Spe [opzioni] " << std::endl;
-		std::cout << "\nDove *.Spe è il file di dati generato da Maestro(c).\n"<< std::endl;
+void manage_flags::error(){
+	std::cout << "\n\tBasic usage: " << arg[0] << " <file_di_dati> \n" << std::endl;
+	std::cout << "\tFor help type: " << arg[0] << " --help or -h\n" << std::endl;
+	exit(1);
+}
 
-		std::cout << "\nPossibili opzioni: " << std::endl;
-		std::cout << "  --background=" << "\tDeve essere seguito (senza spazi) dal nome del file con i dati del fondo. Se presente rimuove il fondo dai dati.\n"<< std::endl;
-		std::cout << "  --type=" << "\tPuò essere usato solo insieme alla flag ''--background'' (è facoltativo: l'opzione di deafult è 'single', vedi dopo); setta il tipo di output su canvas. Le possibili opzioni sono: ''single'' (visualizza solo i dati puliti dal fondo); ''same'' (visualizza dati con il fondo e senza fondo sulla stessa canvas); ''split'' (divide le canvas in due e stampa sia sia i dati col fondo che senza).\n" << std::endl;
-		std::cout << std::endl;
-		exit(2); //interrompo il programma se ho richiesto l'output di aiuto
+void manage_flags::help(){
+	std::cout << "\nQuesto è un programma per eseguire analisi dati su file *.Spe generati da Maestro(c).\n\n";
+	std::cout << "Utilizzo:" << std::endl;
+	std::cout << "1) \t" << arg[0] << " [opzioni] *.Spe\n2)\t" << arg[0] << " *.Spe [opzioni] " << std::endl;
+	std::cout << "\nDove *.Spe è il file di dati generato da Maestro(c).\n"<< std::endl;
+
+	std::cout << "\nPossibili opzioni: " << std::endl;
+	std::cout << "  --background=" << "\tDeve essere seguito (senza spazi) dal nome del file con i dati del fondo. Se presente rimuove il fondo dai dati.\n"<< std::endl;
+	std::cout << "  --type=" << "\tPuò essere usato solo insieme alla flag ''--background'' (è facoltativo: l'opzione di deafult è 'single', vedi dopo); setta il tipo di output su canvas. Le possibili opzioni sono: ''single'' (visualizza solo i dati puliti dal fondo); ''same'' (visualizza dati con il fondo e senza fondo sulla stessa canvas); ''split'' (divide le canvas in due e stampa sia sia i dati col fondo che senza).\n" << std::endl;
+	std::cout << std::endl;
+	exit(2); //interrompo il programma se ho richiesto l'output di aiuto
+}
+
+void manage_flags::run(){
+	if(backgroundfile.empty()){
+		application app(filename);
+		app.run();
 	}
-
-	void manage_flags::run(){
-		if(backgroundfile.empty()){
-			application app(filename);
-			app.run();
-		}
-		else{
-			application app(filename, backgroundfile, type);
-			app.run();
-		}
+	else{
+		application app(filename, backgroundfile, type);
+		app.run();
 	}
+}
