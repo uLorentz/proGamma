@@ -55,8 +55,9 @@ void rooting::run_same_no_config(std::vector<int>& cleaned, std::vector<int>& un
 	std::cout << std::endl << "Nessuna configurazione dei canali per il fit trovata, analizzare il grafico ed inserire i canali scegliendo (1). " <<std::endl;
 	canvas_data=new TCanvas();
 	canvas_data->cd();
-	gg->Draw();
-	gg2->Draw("same"); //corretto?
+	gg2->SetLineColor(11);
+	gg->Draw(); //corretto?
+	gg2->Draw("same");
 	canvas_data->Modified();
 	canvas_data->Update();
 }
@@ -276,10 +277,10 @@ void rooting::run_same_config(std::vector<int>& cleaned, std::vector<int>& uncle
 		std::setw(width) << par[1] << std::setw(width) << par[2] <<
 		std::endl << std::endl;
 	total->SetParameters(par);
-	total->SetLineColor(6);
+	total->SetLineColor(7);
 	gg->Fit(total,"R+","",ch1,ch2);
 	total2->SetParameters(par2);
-	total2->SetLineColor(6);
+	total2->SetLineColor(8);
 	gg2->Fit(total2,"R+","",ch1,ch2);
 
 
@@ -337,7 +338,7 @@ void rooting::run_same_config(std::vector<int>& cleaned, std::vector<int>& uncle
 	g1->SetParameters(&par[0]);
 	g1->SetLineColor(3);
 	g2->SetParameters(&par2[0]);
-	g2->SetLineColor(3);
+	g2->SetLineColor(4);
 	canvas_gauss->cd();
 	g1->Draw();
 	g2->Draw("same");
@@ -347,13 +348,14 @@ void rooting::run_same_config(std::vector<int>& cleaned, std::vector<int>& uncle
 	pp->SetParameters(&par[3]);
 	pp->SetLineColor(5);
 	pp2->SetParameters(&par2[3]);
-	pp2->SetLineColor(5);
+	pp2->SetLineColor(6);
 	canvas_pol->cd();
 	pp->Draw();
 	pp2->Draw("same");
 	canvas_pol->Modified();
 	canvas_pol->Update();
 	canvas_data->cd();
+	gg2->SetLineColor(11);
 	gg->Draw();
 	gg2->Draw("same");
 	canvas_data->Modified();
