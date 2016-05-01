@@ -145,7 +145,6 @@ private:
 	TF1* g1, *g2;
 	TF1* pp, *pp2;
 	TF1* total, *total2;
-
 };
 
 

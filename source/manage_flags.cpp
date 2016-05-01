@@ -39,7 +39,7 @@ void manage_flags::setflags(){
 		if(arg[i]=="-h" or arg[i]=="--help")
 			help();
 
-	//CERCO:
+		//CERCO:
 		//1) FILE DI DATI
 		find_file=arg[i].find(".Spe");
 		//2) FILE BACKGROUND
@@ -48,9 +48,7 @@ void manage_flags::setflags(){
 		find_type=arg[i].find("--type");
 
 
-
-
-	//SETTO:
+		//SETTO:
 		//1) FILE DATI
 		if(find_file!=std::string::npos){
 			find_file=arg[i].find("--background");
@@ -72,7 +70,6 @@ void manage_flags::setflags(){
 				std::cout << "\nERROR: " << arg[i] << " is not a valid option" << std::endl;
 				error();
 			}
-
 		}
 
 		//3) CANVAS
@@ -91,12 +88,10 @@ void manage_flags::setflags(){
 		}
 
 
-
-
 		if(find_file==find_back==find_type){ //se sono uguali sono ad npos, non ho trovato nulla. Nota per ogni nuova opzione aggiunta va aggiunto l'== di quell'opzione
 
-		//perché questo non funziona?
-		//if(find_file==find_config==std::string::npos){ //l'opzione non è valida
+			//perché questo non funziona?
+			//if(find_file==find_config==std::string::npos){ //l'opzione non è valida
 			std::cout << "\nERROR: "  << arg[i] <<" is non a valid option" << std::endl;
 			error();
 		}

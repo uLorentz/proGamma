@@ -188,7 +188,7 @@ void application::ROOT_stuff(){
 			}
 			else
 				root.delete_no_config();
-		
+
 		}
 		else{
 			if(background_removed){
