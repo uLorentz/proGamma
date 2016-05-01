@@ -37,7 +37,8 @@ void rooting::run_no_config(std::vector<int>& data){
 
 void rooting::delete_no_config(){
 	delete gg;
-	delete canvas_data;
+	if(canvas_data->IsOnHeap())
+		delete canvas_data;
 }
 
 void rooting::run_same_no_config(std::vector<int>& cleaned, std::vector<int>& uncleaned){
@@ -63,7 +64,8 @@ void rooting::run_same_no_config(std::vector<int>& cleaned, std::vector<int>& un
 void rooting::delete_same_no_config(){
 	delete gg;
 	delete gg2;
-	delete canvas_data;
+	if(canvas_data->IsOnHeap()) 
+		delete canvas_data;
 }
 
 void rooting::run_split_no_config(std::vector<int>& cleaned, std::vector<int>& uncleaned){
@@ -93,7 +95,8 @@ void rooting::run_split_no_config(std::vector<int>& cleaned, std::vector<int>& u
 void rooting::delete_split_no_config(){
 	delete gg;
 	delete gg2;
-	delete canvas_data;
+	if(canvas_data->IsOnHeap())
+		delete canvas_data;
 }
 
 
@@ -211,9 +214,12 @@ void rooting::delete_one_config(){
 	delete g1;
 	delete pp;
 	delete total;
-	delete canvas_data;
-	delete canvas_pol;
-	delete canvas_gauss;
+	if(canvas_data->IsOnHeap())
+		delete canvas_data;
+	if(canvas_pol->IsOnHeap())
+		delete canvas_pol;
+	if(canvas_gauss->IsOnHeap())
+		delete canvas_gauss;
 }
 
 void rooting::run_same_config(std::vector<int>& cleaned, std::vector<int>& uncleaned,bin_config config, times data_times){
@@ -363,9 +369,12 @@ void rooting::delete_same_config(){
 	delete g2;
 	delete pp2;
 	delete total2;
-	delete canvas_data;
-	delete canvas_pol;
-	delete canvas_gauss;
+	if(canvas_data->IsOnHeap())
+		delete canvas_data;
+	if(canvas_pol->IsOnHeap())
+		delete canvas_pol;
+	if(canvas_gauss->IsOnHeap())
+		delete canvas_gauss;
 }
 
 
@@ -528,9 +537,11 @@ void rooting::delete_split_config(){
 	delete g2;
 	delete pp2;
 	delete total2;
-	delete canvas_data;
-	delete canvas_pol;
-	delete canvas_gauss;
+	if(canvas_data->IsOnHeap())
+		delete canvas_data;
+	if(canvas_pol->IsOnHeap())
+		delete canvas_pol;
+	if(canvas_gauss->IsOnHeap())
+		delete canvas_gauss;
 }
-
 
