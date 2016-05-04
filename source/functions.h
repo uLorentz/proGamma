@@ -61,6 +61,8 @@ private:
 
 	//variables needed by application constructor
 	std::string filename, backgroundfile, type;
+	bool all_graph; //stampa tutti i grafici se true
+	bool gross; //se true stampa il fondo e i dati grezzi
 };
 
 
@@ -102,7 +104,8 @@ private:
 /******** ROOTING *********/
 class rooting{
 public:
-	rooting();
+	//all graph: stampa tutti i grafici o solo i dati
+	rooting(bool _all_graph=false);
 
 	/************* NO CONFIG ************/
 	void run_no_config(std::vector<int>& data);
@@ -139,6 +142,7 @@ public:
 
 
 private:
+	bool all_graph; //stampa tutti i grafici o solo i cazzo di dati
 	TApplication myApp; // TApplication needed for X11 output
 	TCanvas *canvas_data, *canvas_gauss, *canvas_pol;
 	TH1F* gg, *gg2;
@@ -153,9 +157,10 @@ private:
 class application{
 public:
 	//name of '.Spe' file. 'choose=false' if you want to use the last config,
+	//all_graph: stampa tutti i grafici o solo i dati
 	//backgroundfile: leave blanc if no background is provided
 	//_type: type of canvas drawing, possibile options are: "single", "split", "same
-	application(std::string filename,  std::string backgroundfile="", std::string _type="single");
+	application(std::string filename, bool all_graph , std::string backgroundfile="", bool _gross=false, std::string _type="single");
 	void run();
 
 private:
@@ -193,6 +198,8 @@ private:
 	bool config_empty;
 	//'true' if user want to chose a particular config, otherwise 'false'
 	bool choose;
+	//"true" stampa i dati grezzi e il fondo, default "same"
+	bool gross;
 	//peak fit bounds
 	unsigned int ch1, ch2;
 	//vector containing all peak config

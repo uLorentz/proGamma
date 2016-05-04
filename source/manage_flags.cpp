@@ -15,8 +15,10 @@
 manage_flags::manage_flags(unsigned int argc, char** argv) :
 	backgroundfile(""),
 	type("single"),
+	all_graph(false),
+	gross(false),
 	minargs(2),
-	maxargs(4) //da settarsi a seconda delle possibili flag
+	maxargs(6) //da settarsi a seconda delle possibili flag (TODO 6 è corretto?)
 {
 	for(int i=0; i<argc; ++i)
 		arg.push_back(argv[i]);
@@ -33,12 +35,12 @@ void manage_flags::setflags(){
 
 	//ho trovato le varie opzioni /file?
 	std::size_t find_file=std::string::npos, find_back=std::string::npos, find_type=std::string::npos;
+	std::size_t find_all=std::string::npos, find_gross=std::string::npos;
 	//Analizzo tutti gli argomenti
 	for(int i=1; i<arg.size(); ++i){
 		//l'utente ha bisogno di aiuto?
 		if(arg[i]=="-h" or arg[i]=="--help")
 			help();
-
 		//CERCO:
 		//1) FILE DI DATI
 		find_file=arg[i].find(".Spe");
@@ -46,7 +48,10 @@ void manage_flags::setflags(){
 		find_back=arg[i].find("--background");
 		//3) TIPO DI CANVAS
 		find_type=arg[i].find("--type");
-
+		//4) ALL GRAPH
+		find_all=arg[i].find("--all-graph");
+		//5) GROSS
+		find_gross=arg[i].find("--gross");
 
 		//SETTO:
 		//1) FILE DATI
@@ -73,7 +78,7 @@ void manage_flags::setflags(){
 		}
 
 		//3) CANVAS
-		if(find_type!=std::string::npos){
+		else if(find_type!=std::string::npos){
 			find_type=arg[i].find("=");
 			//ho dato una config non corretta
 			if(find_type==std::string::npos){
@@ -86,15 +91,22 @@ void manage_flags::setflags(){
 				error();
 			}
 		}
+		//4) ALL GRAPH
+		else if(find_all!=std::string::npos)
+			all_graph=true;
+		//5) GROSS
+		else if(find_gross!=std::string::npos)
+			gross=true;	
 
-
-		if(find_file==find_back==find_type){ //se sono uguali sono ad npos, non ho trovato nulla. Nota per ogni nuova opzione aggiunta va aggiunto l'== di quell'opzione
+		//TODO TROVARE UN MODO FUNZIONANTE
+/*		else{ //ora dovrebbe fuzionare senza dover aggiungere nuovi == ogn volta
+		//if(find_file==find_back==find_type==find_all){ //se sono uguali sono ad npos, non ho trovato nulla. Nota per ogni nuova opzione aggiunta va aggiunto l'== di quell'opzione
 
 			//perché questo non funziona?
 			//if(find_file==find_config==std::string::npos){ //l'opzione non è valida
 			std::cout << "\nERROR: "  << arg[i] <<" is non a valid option" << std::endl;
 			error();
-		}
+		}*/
 	}
 
 	//non ho trovato il file di dati
@@ -119,17 +131,25 @@ void manage_flags::help(){
 	std::cout << "\nPossibili opzioni: " << std::endl;
 	std::cout << "  --background=" << "\tDeve essere seguito (senza spazi) dal nome del file con i dati del fondo. Se presente rimuove il fondo dai dati.\n"<< std::endl;
 	std::cout << "  --type=" << "\tPuò essere usato solo insieme alla flag ''--background'' (è facoltativo: l'opzione di deafult è 'single', vedi dopo); setta il tipo di output su canvas. Le possibili opzioni sono: ''single'' (visualizza solo i dati puliti dal fondo); ''same'' (visualizza dati con il fondo e senza fondo sulla stessa canvas); ''split'' (divide le canvas in due e stampa sia sia i dati col fondo che senza).\n" << std::endl;
+	std::cout << "  --all-graph" << "\tStampa tutti i grafici: dati, polinomio e gaussiana. Senza questa opzione viene stampato solo il grafico delle spettro.\n"<< std::endl;
+	std::cout << "  --gross\tStampa i dati grezzi insieme al fondo, la configurazione di default è same. Blu sono i dati, grigio il fondo.\n" <<std::endl;
 	std::cout << std::endl;
 	exit(2); //interrompo il programma se ho richiesto l'output di aiuto
 }
 
 void manage_flags::run(){
+	if(backgroundfile.empty() and gross){
+		std::cout << "\nAttento: hai richiesto di stampare il fondo insieme ai dati grezzi ma non hai fornito nessun dato per il fondo.\n"
+			 <<"L'opzione ''--gross'' può essere usata solo insieme all'opzione ''--background=nomefile''."<< std::endl;
+		exit(2);
+	}
 	if(backgroundfile.empty()){
-		application app(filename);
+		application app(filename, all_graph);
 		app.run();
 	}
 	else{
-		application app(filename, backgroundfile, type);
+		application app(filename,all_graph, backgroundfile, gross, type);
 		app.run();
 	}
 }
+	

@@ -12,13 +12,16 @@
 
 #include "functions.h"
 
-rooting::rooting() :
-	myApp("myApp", 0, 0)
+rooting::rooting(bool _all_graph) :
+	myApp("myApp", 0, 0),
+	all_graph(_all_graph)
 {
 	//BOOOOOOOOH QUi è tutta la roba che ha scritto la meroni e la lascio così per ora
 	gStyle->SetOptStat(111111111);
 	gStyle->SetOptFit(111111);
 }
+
+/***** NOT CONFIGURED *****/
 
 void rooting::run_no_config(std::vector<int>& data){
 
@@ -100,13 +103,16 @@ void rooting::delete_split_no_config(){
 		delete canvas_data;
 }
 
+/***** CONFIGURED *****/
 
 void rooting::run_one_config(std::vector<int>& data,bin_config config, times data_times){
 	unsigned int ch1=config.left;
 	unsigned int ch2=config.right;
 	// canvas
-	canvas_gauss=new TCanvas("gauss", "gauss");
-	canvas_pol=new TCanvas("pol", "pol");
+	if(all_graph){ //stampo tutti i grafici
+		canvas_gauss=new TCanvas("gauss", "gauss");
+		canvas_pol=new TCanvas("pol", "pol");
+	}
 	canvas_data=new TCanvas("spettro", "spettro");
 
 
@@ -187,23 +193,26 @@ void rooting::run_one_config(std::vector<int>& data,bin_config config, times dat
 		std::setw(width) << "Real Time" << std::endl;
 	std::cout<< std::left  << " "  << data_times.live << "\t\t     " <<
 		data_times.real << std::endl << std::endl;
+	
+	if(all_graph){ //tutti i grafici inutili
+		// per disegnare le curve parziali
+		g1->SetParameters(&par[0]);
+		g1->SetLineColor(3);
+	
+	
+		canvas_gauss->cd();
+		g1->Draw();
+		canvas_gauss->Modified();
+		canvas_gauss->Update();
+	
+		pp->SetParameters(&par[3]);
+		pp->SetLineColor(5);
+		canvas_pol->cd();
+		pp->Draw();
+		canvas_pol->Modified();
+		canvas_pol->Update();
+	}
 
-	// per disegnare le curve parziali
-	g1->SetParameters(&par[0]);
-	g1->SetLineColor(3);
-
-
-	canvas_gauss->cd();
-	g1->Draw();
-	canvas_gauss->Modified();
-	canvas_gauss->Update();
-
-	pp->SetParameters(&par[3]);
-	pp->SetLineColor(5);
-	canvas_pol->cd();
-	pp->Draw();
-	canvas_pol->Modified();
-	canvas_pol->Update();
 	canvas_data->cd();
 	gg->Draw();
 	canvas_data->Modified();
@@ -217,18 +226,22 @@ void rooting::delete_one_config(){
 	delete total;
 	if(canvas_data->IsOnHeap())
 		delete canvas_data;
-	if(canvas_pol->IsOnHeap())
-		delete canvas_pol;
-	if(canvas_gauss->IsOnHeap())
-		delete canvas_gauss;
+	if(all_graph){
+		if(canvas_pol->IsOnHeap())
+			delete canvas_pol;
+		if(canvas_gauss->IsOnHeap())
+			delete canvas_gauss;
+	}
 }
 
 void rooting::run_same_config(std::vector<int>& cleaned, std::vector<int>& uncleaned,bin_config config, times data_times){
 	unsigned int ch1=config.left;
 	unsigned int ch2=config.right;
-	//canvas
-	canvas_gauss=new TCanvas("gauss", "gauss");
-	canvas_pol=new TCanvas("pol", "pol");
+	if(all_graph){ //stampo tutti i grafici
+		//canvas
+		canvas_gauss=new TCanvas("gauss", "gauss");
+		canvas_pol=new TCanvas("pol", "pol");
+	}
 	canvas_data=new TCanvas("spettro", "spettro");
 
 
@@ -335,27 +348,31 @@ void rooting::run_same_config(std::vector<int>& cleaned, std::vector<int>& uncle
 		std::setw(width) << "Real Time" << std::endl;
 	std::cout<< std::left  << " "  << data_times.live << "\t\t     " <<
 		data_times.real << std::endl << std::endl;
+	
 
-	// per disegnare le curve parziali
-	g1->SetParameters(&par[0]);
-	g1->SetLineColor(3);
-	g2->SetParameters(&par2[0]);
-	g2->SetLineColor(4);
-	canvas_gauss->cd();
-	g1->Draw();
-	g2->Draw("same");
-	canvas_gauss->Modified();
-	canvas_gauss->Update();
-
-	pp->SetParameters(&par[3]);
-	pp->SetLineColor(5);
-	pp2->SetParameters(&par2[3]);
-	pp2->SetLineColor(6);
-	canvas_pol->cd();
-	pp->Draw();
-	pp2->Draw("same");
-	canvas_pol->Modified();
-	canvas_pol->Update();
+	if(all_graph){ //stampo tutti i grafici
+	
+		// per disegnare le curve parziali
+		g1->SetParameters(&par[0]);
+		g1->SetLineColor(3);
+		g2->SetParameters(&par2[0]);
+		g2->SetLineColor(4);
+		canvas_gauss->cd();
+		g1->Draw();
+		g2->Draw("same");
+		canvas_gauss->Modified();
+		canvas_gauss->Update();
+	
+		pp->SetParameters(&par[3]);
+		pp->SetLineColor(5);
+		pp2->SetParameters(&par2[3]);
+		pp2->SetLineColor(6);
+		canvas_pol->cd();
+		pp->Draw();
+		pp2->Draw("same");
+		canvas_pol->Modified();
+		canvas_pol->Update();
+	}
 	canvas_data->cd();
 	gg2->SetLineColor(11);
 	gg->Draw();
@@ -375,10 +392,12 @@ void rooting::delete_same_config(){
 	delete total2;
 	if(canvas_data->IsOnHeap())
 		delete canvas_data;
-	if(canvas_pol->IsOnHeap())
-		delete canvas_pol;
-	if(canvas_gauss->IsOnHeap())
-		delete canvas_gauss;
+	if(all_graph){ //stampo tutti i grafici
+		if(canvas_pol->IsOnHeap())
+			delete canvas_pol;
+		if(canvas_gauss->IsOnHeap())
+			delete canvas_gauss;
+	}
 }
 
 
@@ -496,30 +515,32 @@ void rooting::run_split_config(std::vector<int>& cleaned, std::vector<int>& uncl
 	g2->SetLineColor(3);
 
 	//canvas
-	canvas_gauss=new TCanvas("gauss", "gauss");
-	canvas_pol=new TCanvas("pol", "pol");
 	canvas_data=new TCanvas("spettro", "spettro");
-	//stampo gauss
-	canvas_gauss->Divide(1,2);
-	canvas_gauss->cd(1);
-	g1->Draw();
-	canvas_gauss->cd(2);
-	g2->Draw();
-	canvas_gauss->Modified();
-	canvas_gauss->Update();
-
-	pp->SetParameters(&par[3]);
-	pp->SetLineColor(5);
-	pp2->SetParameters(&par2[3]);
-	pp2->SetLineColor(5);
-	//stampo il polinoio
-	canvas_pol->Divide(1,2);
-	canvas_pol->cd(1);
-	pp->Draw();
-	canvas_pol->cd(2);
-	pp2->Draw();
-	canvas_pol->Modified();
-	canvas_pol->Update();
+	if(all_graph){ //stampo tutti i grafici
+		canvas_gauss=new TCanvas("gauss", "gauss");
+		canvas_pol=new TCanvas("pol", "pol");
+		//stampo gauss
+		canvas_gauss->Divide(1,2);
+		canvas_gauss->cd(1);
+		g1->Draw();
+		canvas_gauss->cd(2);
+		g2->Draw();
+		canvas_gauss->Modified();
+		canvas_gauss->Update();
+	
+		pp->SetParameters(&par[3]);
+		pp->SetLineColor(5);
+		pp2->SetParameters(&par2[3]);
+		pp2->SetLineColor(5);
+		//stampo il polinoio
+		canvas_pol->Divide(1,2);
+		canvas_pol->cd(1);
+		pp->Draw();
+		canvas_pol->cd(2);
+		pp2->Draw();
+		canvas_pol->Modified();
+		canvas_pol->Update();
+	}
 	//stampo i dati
 	canvas_data->Divide(1,2);
 	canvas_data->cd(1);
@@ -543,9 +564,11 @@ void rooting::delete_split_config(){
 	delete total2;
 	if(canvas_data->IsOnHeap())
 		delete canvas_data;
-	if(canvas_pol->IsOnHeap())
-		delete canvas_pol;
-	if(canvas_gauss->IsOnHeap())
-		delete canvas_gauss;
+	if(all_graph){ //stampo tutti i grafici
+		if(canvas_pol->IsOnHeap())
+			delete canvas_pol;
+		if(canvas_gauss->IsOnHeap())
+			delete canvas_gauss;
+	}
 }
 

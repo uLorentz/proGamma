@@ -12,11 +12,12 @@
 
 #include "functions.h"
 
-application::application(std::string filename,  std::string backgroundfile, std::string _type ) :
+application::application(std::string filename, bool all_graph, std::string backgroundfile, bool _gross, std::string _type ) :
 
 	signal(filename),
-
+	root(all_graph),
 	type(_type),
+	gross(_gross),
 	ch1(0),
 	ch2(0),
 	stay_alive(true),
@@ -44,6 +45,9 @@ application::application(std::string filename,  std::string backgroundfile, std:
 		back.read_data(background, back_times);
 		remove_background();
 	}
+	if(gross)
+		if(type=="single")
+			type="same"; //metto di default same se è gross
 }
 
 void application::choose_config(){ //abbastanza autoesplicativo
@@ -133,10 +137,18 @@ void application::ROOT_stuff(){
 			if(background_removed){ //c'è il fondo da rimuovere
 				if(type=="single")
 					root.run_no_config(data_cleaned);
-				if(type=="split")
-					root.run_split_no_config(data_cleaned, data);
-				if(type=="same")
-					root.run_same_no_config(data_cleaned, data);
+				if(type=="split"){
+					if(gross)
+						root.run_split_no_config(data, background);		
+					else
+						root.run_split_no_config(data_cleaned, data);
+				}
+				if(type=="same"){
+					if(gross)
+						root.run_same_no_config(data, background);
+					else
+						root.run_same_no_config(data_cleaned, data);
+				}
 			}
 			else
 				root.run_no_config(data);
@@ -146,10 +158,18 @@ void application::ROOT_stuff(){
 			if(background_removed){
 				if(type=="single")
 					root.run_one_config(data_cleaned, bin, data_times);
-				if(type=="split")
-					root.run_split_config(data_cleaned, data, bin, data_times);
-				if(type=="same")
-					root.run_same_config(data_cleaned, data, bin, data_times);
+				if(type=="split"){
+					if(gross)
+						root.run_split_config(data, background, bin, data_times);
+					else
+						root.run_split_config(data_cleaned, data, bin, data_times);
+				}
+				if(type=="same"){
+					if(gross)
+						root.run_same_config(data, background, bin, data_times);
+					else
+						root.run_same_config(data_cleaned, data, bin, data_times);
+				}
 			}
 			else
 				root.run_one_config(data, bin ,data_times);
@@ -237,7 +257,7 @@ void application::run(){
 			// DIVIDO il caso in cui ci sono configurazioni precedenti e il caso in cui non ci sono
 			if(config_empty){
 				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire il fit "
-					<<  "\n\t(2) per terminare il programma" ;
+					<<  "\n\t(q) per terminare il programma" ;
 				if(pause_root)
 					std::cout << "\n\t(r) per far ripartire ROOT (per grafici "
 						"interattivi)." << std::endl;
@@ -248,7 +268,7 @@ void application::run(){
 			else{
 				std::cout << "Premi:\n\t(1) per configurare i canali ed eseguire il fit"
 					<< "\n\t(2) per scegliere una configurazione precedentemente"
-					<<  " usata;\n\t(3) per terminare il programma";
+					<<  " usata;\n\t(q) per terminare il programma";
 				if(pause_root)
 					std::cout << "\n\t(r) per far ripartire ROOT (per grafici "
 						"interattivi)." << std::endl;
@@ -261,8 +281,8 @@ void application::run(){
 			fine=true;
 			getline( std::cin, str);
 
-			//se l'utente non ha inserito p o r
-			if(str!="r" and str!="p"){
+			//se l'utente non ha inserito p, r o q
+			if(str!="r" and str!="p" and str!="q"){
 				if(str.empty())
 					fine=false;
 				try{
@@ -273,7 +293,7 @@ void application::run(){
 				}
 
 				if(!config_empty){
-					if(!fine or (what<1 or what>3)){
+					if(!fine or (what<1 or what>2)){
 						//se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
 						fine=false;
 						std::cout << "\n\n\nATTENZIONE: scelta non valida! "
@@ -282,7 +302,7 @@ void application::run(){
 					}
 				}
 				else{
-					if(!fine or (what<1 or what>2)){
+					if(!fine or (what!=1)){
 						//se invalid_argument lo è già, ma se è fuori dal range di risposte possibili no
 						fine=false;
 						std::cout << "\n\n\nATTENZIONE: scelta non valida! "
@@ -292,7 +312,7 @@ void application::run(){
 						what++;
 				}
 			}
-			else{ //r o p
+			else{ //r o p o q
 				what=0; //così non entro in uno degli "if" sbagliati
 				if(str=="r")
 					wakeup_root(); //sveglia!
@@ -322,7 +342,7 @@ void application::run(){
 			if(pause_root) //se root è in pausa lo sveglio
 				wakeup_root();
 		}
-		if(what==3){
+		if(str=="q"){
 			std::cout<< std::endl << "ATTENZIONE: riceverai un sacco di insulti"
 				" da ROOT ma va tutto ''bene''. Ciao!" << std::endl<< std::endl;
 			sleep(2);
