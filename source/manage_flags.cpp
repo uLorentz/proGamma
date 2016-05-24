@@ -106,7 +106,7 @@ void manage_flags::setflags(){
 		find_type==std::string::npos and
 		find_all==std::string::npos and
 		find_gross==std::string::npos) //TODO Per ogni nuova flag va aggiunto qui il controllo. Probabilmente non è il modo più efficiente  efunzionale..
-		{	std::cout << "dove sono? " << i << std::endl;
+		{	
 			std::cout << "\nERROR: "  << arg[i] <<" is non a valid option" << std::endl;
 			error();
 		}
@@ -133,9 +133,9 @@ void manage_flags::help(){
 
 	std::cout << "\nPossibili opzioni: " << std::endl;
 	std::cout << "  --background=" << "\tDeve essere seguito (senza spazi) dal nome del file con i dati del fondo. Se presente rimuove il fondo dai dati.\n"<< std::endl;
-	std::cout << "  --type=" << "\tPuò essere usato solo insieme alla flag ''--background'' (è facoltativo: l'opzione di deafult è 'single', vedi dopo); setta il tipo di output su canvas. Le possibili opzioni sono: ''single'' (visualizza solo i dati puliti dal fondo); ''same'' (visualizza dati con il fondo e senza fondo sulla stessa canvas); ''split'' (divide le canvas in due e stampa sia sia i dati col fondo che senza).\n" << std::endl;
+	std::cout << "  --type=" << "\tPuò essere usato solo insieme alla flag ''--background'' (è facoltativo: l'opzione di deafult è 'single', vedi dopo); setta il tipo di output su canvas. Le possibili opzioni sono: \n\t\t''single'' (visualizza solo i dati puliti dal fondo, opzione di default);\n\t\t''same'' (visualizza dati con il fondo e senza fondo sulla stessa canvas); \n\t\t''split'' (divide le canvas in due e stampa sia sia i dati col fondo che senza).\n" << std::endl;
 	std::cout << "  --all-graph" << "\tStampa tutti i grafici: dati, polinomio e gaussiana. Senza questa opzione viene stampato solo il grafico delle spettro.\n"<< std::endl;
-	std::cout << "  --gross\tStampa i dati grezzi insieme al fondo, la configurazione di default è same. Blu sono i dati, grigio il fondo.\n" <<std::endl;
+	std::cout << "  --gross\tStampa i dati grezzi insieme al fondo, la configurazione di default è same. I dati sono blu, il fondo grigio. La configurazione './proGamma file1.Spe --background=file2.Spe --gross' può essere utilizzata per confrontare due spettri generici.\n" <<std::endl;
 	std::cout << std::endl;
 	exit(2); //interrompo il programma se ho richiesto l'output di aiuto
 }
