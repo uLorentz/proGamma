@@ -56,9 +56,11 @@ void manage_flags::setflags(){
 		//SETTO:
 		//1) FILE DATI
 		if(find_file!=std::string::npos){
-			find_file=arg[i].find("--background");
-			if(find_file==std::string::npos) //potrebbe essere il file del fondo, e io non lo voglio!
+			find_back=arg[i].find("--background");
+			if(find_back==std::string::npos){ //potrebbe essere il file del fondo, e io non lo voglio!
 				filename=arg[i];
+				find_back=std::string::npos; //riporto alla posizione iniziale
+			}
 		}
 
 		//2) FILE BACKGROUND
@@ -98,15 +100,16 @@ void manage_flags::setflags(){
 		else if(find_gross!=std::string::npos)
 			gross=true;	
 
-		//TODO TROVARE UN MODO FUNZIONANTE
-/*		else{ //ora dovrebbe fuzionare senza dover aggiungere nuovi == ogn volta
-		//if(find_file==find_back==find_type==find_all){ //se sono uguali sono ad npos, non ho trovato nulla. Nota per ogni nuova opzione aggiunta va aggiunto l'== di quell'opzione
-
-			//perché questo non funziona?
-			//if(find_file==find_config==std::string::npos){ //l'opzione non è valida
+	
+		if(find_file==std::string::npos and 
+		find_back==std::string::npos and
+		find_type==std::string::npos and
+		find_all==std::string::npos and
+		find_gross==std::string::npos) //TODO Per ogni nuova flag va aggiunto qui il controllo. Probabilmente non è il modo più efficiente  efunzionale..
+		{	std::cout << "dove sono? " << i << std::endl;
 			std::cout << "\nERROR: "  << arg[i] <<" is non a valid option" << std::endl;
 			error();
-		}*/
+		}
 	}
 
 	//non ho trovato il file di dati

@@ -16,7 +16,6 @@ rooting::rooting(bool _all_graph) :
 	myApp("myApp", 0, 0),
 	all_graph(_all_graph)
 {
-	//BOOOOOOOOH QUi è tutta la roba che ha scritto la meroni e la lascio così per ora
 	gStyle->SetOptStat(111111111);
 	gStyle->SetOptFit(111111);
 }
@@ -133,7 +132,7 @@ void rooting::run_one_config(std::vector<int>& data,bin_config config, times dat
 	}
 
 	// fit con solo gauss per ottenere parametri iniziali
-	gg->Fit(g1,"R"); //TODO sarebbe bello poter stampare su file i risultati del fit, ma come diavolo funziona root?
+	gg->Fit(g1,"R"); 
 	g1->GetParameters(&par[0]);
 
 	short width=20; //larghezza stampa
@@ -274,10 +273,10 @@ void rooting::run_same_config(std::vector<int>& cleaned, std::vector<int>& uncle
 	}
 
 	// fit con solo gauss per ottenere parametri iniziali
-	gg->Fit(g1,"R"); //TODO sarebbe bello poter stampare su file i risultati del fit, ma come diavolo funziona root?
+	gg->Fit(g1,"R"); 
 	g1->GetParameters(&par[0]);
 
-	gg2->Fit(g2,"R"); //TODO sarebbe bello poter stampare su file i risultati del fit, ma come diavolo funziona root?
+	gg2->Fit(g2,"R"); 
 	g2->GetParameters(&par2[0]);
 
 	short width=20; //larghezza stampa
@@ -433,10 +432,10 @@ void rooting::run_split_config(std::vector<int>& cleaned, std::vector<int>& uncl
 	}
 
 	// fit con solo gauss per ottenere parametri iniziali
-	gg->Fit(g1,"R"); //TODO sarebbe bello poter stampare su file i risultati del fit, ma come diavolo funziona root?
+	gg->Fit(g1,"R"); 
 	g1->GetParameters(&par[0]);
 
-	gg2->Fit(g2,"R"); //TODO sarebbe bello poter stampare su file i risultati del fit, ma come diavolo funziona root?
+	gg2->Fit(g2,"R"); 
 	g2->GetParameters(&par2[0]);
 
 	short width=20; //larghezza stampa
