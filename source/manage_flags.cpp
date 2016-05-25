@@ -68,13 +68,13 @@ void manage_flags::setflags(){
 			find_back=arg[i].find("=");
 			//ho dato una config non corretta
 			if(find_back==std::string::npos){
-				std::cout << "\nERROR: " << arg[i] << " is not a valid option" << std::endl;
+				std::cout << "\nERRORE: "  << arg[i] <<" non è un'opzione valida, lanciare il programma con l'opzione '--help' per maggiori informazioni." << std::endl;
 				error();
 			}
 			backgroundfile=arg[i].substr(find_back+1);
 
 			if(backgroundfile.empty()){ //il file del background non è stato fornito
-				std::cout << "\nERROR: " << arg[i] << " is not a valid option" << std::endl;
+				std::cout << "\nERRORE: "  << arg[i] <<" non è un'opzione valida, lanciare il programma con l'opzione '--help' per maggiori informazioni." << std::endl;
 				error();
 			}
 		}
@@ -84,12 +84,12 @@ void manage_flags::setflags(){
 			find_type=arg[i].find("=");
 			//ho dato una config non corretta
 			if(find_type==std::string::npos){
-				std::cout << "\nERROR: " << arg[i] << " is not a valid option" << std::endl;
+				std::cout << "\nERRORE: "  << arg[i] <<" non è un'opzione valida, lanciare il programma con l'opzione '--help' per maggiori informazioni." << std::endl;
 				error();
 			}
 			type=arg[i].substr(find_type+1);
 			if(type!="split" and type!="single" and type!="same"){
-				std::cout << "\nERROR: " << arg[i] << " is not a valid option" << std::endl;
+				std::cout << "\nERRORE: "  << arg[i] <<" non è un'opzione valida, lanciare il programma con l'opzione '--help' per maggiori informazioni." << std::endl;
 				error();
 			}
 		}
@@ -102,26 +102,26 @@ void manage_flags::setflags(){
 
 	
 		if(find_file==std::string::npos and 
-		find_back==std::string::npos and
-		find_type==std::string::npos and
-		find_all==std::string::npos and
-		find_gross==std::string::npos) //TODO Per ogni nuova flag va aggiunto qui il controllo. Probabilmente non è il modo più efficiente  efunzionale..
+		   find_back==std::string::npos and
+		   find_type==std::string::npos and
+		   find_all==std::string::npos and
+		   find_gross==std::string::npos) //TODO Per ogni nuova flag va aggiunto qui il controllo. Probabilmente non è il modo più efficiente  efunzionale..
 		{	
-			std::cout << "\nERROR: "  << arg[i] <<" is non a valid option" << std::endl;
+			std::cout << "\nERRORE: "  << arg[i] <<" non è un'opzione valida, lanciare il programma con l'opzione '--help' per maggiori informazioni." << std::endl;
 			error();
 		}
 	}
 
 	//non ho trovato il file di dati
 	if(filename.empty()){
-		std::cout << "\n\tERROR: Missing data file! " <<std::endl;
+		std::cout << "\n\tERRORE: File di dati mancante! " <<std::endl;
 		error();
 	}
 }
 
 void manage_flags::error(){
-	std::cout << "\n\tBasic usage: " << arg[0] << " <file_di_dati> \n" << std::endl;
-	std::cout << "\tFor help type: " << arg[0] << " --help or -h\n" << std::endl;
+	std::cout << "\n\tUtilizzo: " << arg[0] << " <file_di_dati> \n" << std::endl;
+	std::cout << "\tPer un aiuto sulle opzioni disponibili: " << arg[0] << " --help o -h\n" << std::endl;
 	exit(1);
 }
 
@@ -134,8 +134,8 @@ void manage_flags::help(){
 	std::cout << "\nPossibili opzioni: " << std::endl;
 	std::cout << "  --background=" << "\tDeve essere seguito (senza spazi) dal nome del file con i dati del fondo. Se presente rimuove il fondo dai dati.\n"<< std::endl;
 	std::cout << "  --type=" << "\tPuò essere usato solo insieme alla flag ''--background'' (è facoltativo: l'opzione di deafult è 'single', vedi dopo); setta il tipo di output su canvas. Le possibili opzioni sono: \n\t\t''single'' (visualizza solo i dati puliti dal fondo, opzione di default);\n\t\t''same'' (visualizza dati con il fondo e senza fondo sulla stessa canvas); \n\t\t''split'' (divide le canvas in due e stampa sia sia i dati col fondo che senza).\n" << std::endl;
-	std::cout << "  --all-graph" << "\tStampa tutti i grafici: dati, polinomio e gaussiana. Senza questa opzione viene stampato solo il grafico delle spettro.\n"<< std::endl;
-	std::cout << "  --gross\tStampa i dati grezzi insieme al fondo, la configurazione di default è same. I dati sono blu, il fondo grigio. La configurazione './proGamma file1.Spe --background=file2.Spe --gross' può essere utilizzata per confrontare due spettri generici.\n" <<std::endl;
+	std::cout << "  --all-graph" << "\tStampa tutti i grafici: dati, polinomio e gaussiana. Senza questa opzione viene stampato solo il grafico dello spettro.\n"<< std::endl;
+	std::cout << "  --gross\tStampa i dati grezzi insieme al fondo, la configurazione di default è 'same'. I dati sono blu, il fondo grigio. La configurazione './proGamma file1.Spe --background=file2.Spe --gross' può essere utilizzata per confrontare due spettri generici.\n" <<std::endl;
 	std::cout << std::endl;
 	exit(2); //interrompo il programma se ho richiesto l'output di aiuto
 }
@@ -155,4 +155,4 @@ void manage_flags::run(){
 		app.run();
 	}
 }
-	
+
