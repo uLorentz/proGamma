@@ -258,26 +258,19 @@ void rooting::run_same_config(std::vector<int>& cleaned, std::vector<int>& uncle
 	g1=new TF1("g1_no_fondo", "gaus", ch1, ch2);
 	pp= new TF1("pp_no_fondo", "pol1", ch1, ch2);
 	total= new TF1("total_no_fondo","gaus(0)+pol1(3)",ch1,ch2);
-	g2=new TF1("g1_con_fondo", "gaus", ch1, ch2);
-	pp2= new TF1("pp_con_fondo", "pol1", ch1, ch2);
-	total2= new TF1("total_con_fondo","gaus(0)+pol1(3)",ch1,ch2);
-
+	
 	// fit gaus+polinomio
 	Double_t par[12],errpar[12];  //TODO 12?? da capire meglio
 	Double_t par2[12],errpar2[12];  //TODO 12?? da capire meglio
 	for(int i=0; i<12; ++i){
 		par[i]=0;
 		errpar[i]=0;
-		par2[i]=0;
-		errpar2[i]=0;
 	}
 
 	// fit con solo gauss per ottenere parametri iniziali
 	gg->Fit(g1,"R"); 
 	g1->GetParameters(&par[0]);
 
-	gg2->Fit(g2,"R"); 
-	g2->GetParameters(&par2[0]);
 
 	short width=20; //larghezza stampa
 
@@ -293,22 +286,12 @@ void rooting::run_same_config(std::vector<int>& cleaned, std::vector<int>& uncle
 	total->SetParameters(par);
 	total->SetLineColor(7);
 	gg->Fit(total,"R+","",ch1,ch2);
-	total2->SetParameters(par2);
-	total2->SetLineColor(8);
-	gg2->Fit(total2,"R+","",ch1,ch2);
-
-
+	
 	total->GetParameters(&par[0]);
 	errpar[0]=total->GetParError(0);
 	errpar[1]=total->GetParError(1);
 	errpar[2]=total->GetParError(2);
-
-	total2->GetParameters(&par2[0]);
-	errpar2[0]=total2->GetParError(0);
-	errpar2[1]=total2->GetParError(1);
-	errpar2[2]=total2->GetParError(2);
-
-
+	
 	//TODO ma solo io penso che è un bordello allucinante il codice che segue?
 	//Penso che sia inevitabile con tutti questi 'cout'
 	std::cout<<std::endl << "### Fit results - Gauss + Polinomial(1) ###"
@@ -354,21 +337,15 @@ void rooting::run_same_config(std::vector<int>& cleaned, std::vector<int>& uncle
 		// per disegnare le curve parziali
 		g1->SetParameters(&par[0]);
 		g1->SetLineColor(3);
-		g2->SetParameters(&par2[0]);
-		g2->SetLineColor(4);
 		canvas_gauss->cd();
 		g1->Draw();
-		g2->Draw("same");
 		canvas_gauss->Modified();
 		canvas_gauss->Update();
 	
 		pp->SetParameters(&par[3]);
 		pp->SetLineColor(5);
-		pp2->SetParameters(&par2[3]);
-		pp2->SetLineColor(6);
 		canvas_pol->cd();
 		pp->Draw();
-		pp2->Draw("same");
 		canvas_pol->Modified();
 		canvas_pol->Update();
 	}
@@ -386,9 +363,7 @@ void rooting::delete_same_config(){
 	delete pp;
 	delete total;
 	delete gg2;
-	delete g2;
-	delete pp2;
-	delete total2;
+	
 	if(canvas_data->IsOnHeap())
 		delete canvas_data;
 	if(all_graph){ //stampo tutti i grafici
