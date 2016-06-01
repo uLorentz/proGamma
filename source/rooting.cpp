@@ -284,7 +284,7 @@ void rooting::run_same_config(std::vector<int>& cleaned, std::vector<int>& uncle
 		std::setw(width) << par[1] << std::setw(width) << par[2] <<
 		std::endl << std::endl;
 	total->SetParameters(par);
-	total->SetLineColor(7);
+	total->SetLineColor(8);
 	gg->Fit(total,"R+","",ch1,ch2);
 	
 	total->GetParameters(&par[0]);

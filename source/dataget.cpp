@@ -25,7 +25,10 @@ void dataget::read_data ( std::vector<int>& data, times& t){
 	in.open(filename.c_str()); //Apro canale in ingresso e controllo che tutto vada
 
 	if(in.fail()){
-		std::cerr<< "Errore apertura canale in ingresso con il file ''"<<filename<< "''. Chiudo. " << std::endl;
+		std::cerr << "Errore apertura canale in ingresso con il file "\
+			"''" << filename << "''" << std::endl << "Controllare di aver "\
+			"digitato correttamente il nome del file e che il file sia presente "\
+			"al percorso indicato." << std::endl;;
 		exit(2);
 	}
 	std::string temp; //stringa in cui buttare le righe prima del numero di bin
