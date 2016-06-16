@@ -28,8 +28,6 @@
 #include "TH1F.h"
 #include "TCanvas.h"
 #include "TGraph.h"
-#include "TLine.h"
-#include "TGraphErrors.h"
 #include "TF1.h"
 #include "TStyle.h"
 #include "TApplication.h"
